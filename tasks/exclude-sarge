@@ -100,8 +100,8 @@ tk8.0
 xserver-xfree86-dbg
 zmailer
 
-# Packages implementing mail-transport-agent required by at that we
-# do not want on the first CD.
+/* Packages implementing mail-transport-agent required by at that we
+ do not want on the first CD. */
 courier-mta
 deliver
 esmtp
@@ -115,30 +115,30 @@ sendmail
 ssmtp
 zmailer-ssl
 
-# Drop some openoffice.org translations to save space
+/* Drop some openoffice.org translations to save space */
 openoffice.org-l10n-ar
 openoffice.org-l10n-cs
 openoffice.org-l10n-el
 
-# We only need one lyx, lyx-qt
+/* We only need one lyx, lyx-qt */
 lyx-xforms
 
-# Do not need apt-file
+/* Do not need apt-file */
 apt-file
 
-# Do not need elilo - it is mostly for ia64
+/* Do not need elilo - it is mostly for ia64 */
 elilo
 
-# We do not use vserver
+/* We do not use vserver */
 vserver
 
-# We probably do not need rcs
+/* We probably do not need rcs */
 rcs
 
-This installer package is not needed
+/* This installer package is not needed */
 msttcorefonts
 
-# Ignore list from skolelinux
+/* Ignore list from skolelinux */
 acorn-fdisk
 aolserver
 aspell-fo
@@ -179,7 +179,7 @@ telnetd
 vacation
 xdm
 
-# Some extra
+/* Some extra */
 w3m
 wamerican
 mutt
