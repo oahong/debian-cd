@@ -534,7 +534,7 @@ $(SDIR)/CD1/README.html:
 			| sed -e 's/%%.//g' > $$dir/README.html ; \
 		rm -f $$dir/README.diskdefines ; \
 		mkdir -p $$dir/pics ; \
-		cp $(BASEDIR)/data/pics/*.jpg $$dir/pics/ ; \
+		cp $(BASEDIR)/data/pics/*.* $$dir/pics/ ; \
 	done
 
 # Add the install stuff on the first CD
