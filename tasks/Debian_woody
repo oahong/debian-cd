@@ -12,7 +12,11 @@
 #endif
 
 /* Packages that should really be on CD1 */
+#include <debian-installer+kernel>
 #include <base-woody>
+
+#include <debian-edu>
+
 #include <forcd1>
 
 #include <task-woody>
