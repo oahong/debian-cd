@@ -37,3 +37,14 @@ partconf
 partitioner
 # This is obsolete.
 discover2-data-udeb
+
+
+# autopartkit does not work with lvm2, so exclude that and things that
+# depend on it.
+lvm2-udeb
+lvmcfg-utils
+lvmcfg
+partman-lvm
+
+# No 2.6 for debian-edu
+*2.6*

@@ -123,7 +123,7 @@ if [ -e boot$N/isolinux/f3.txt.with26 ];then
 # Isolinux config file.
 cat > boot$N/isolinux/isolinux.cfg <<EOF
 DEFAULT /install/vmlinuz
-APPEND vga=normal initrd=/install/initrd.gz ramdisk_size=10240 root=/dev/rd/0 init=/linuxrc devfs=mount,dall rw
+APPEND vga=normal initrd=/install/initrd.gz ramdisk_size=10240 root=/dev/rd/0 init=/linuxrc devfs=mount,dall rw DEBCONF_PRIORITY=critical
 LABEL linux
   kernel /install/vmlinuz
 LABEL cdrom

@@ -79,7 +79,7 @@ reiserfsprogs-udeb
 netcfg-static
 netcfg-dhcp
 # skolelinux stuff, not for the stock CDs
-debian-edu-install-udeb
-debian-edu-profile-udeb
+#debian-edu-install-udeb
+#debian-edu-profile-udeb
 # If needed, will be on the initrd already.
 module-init-tools-udeb

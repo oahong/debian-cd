@@ -47,8 +47,11 @@ unset DI_CODENAME       || true
 # Where I am (hoping I'm in the debian-cd dir)
 export BASEDIR=`pwd`
 
+# Set where to find the mirrors and where to store the temp files
+export TOPDIR=/skolelinux/developer/local0
+
 # Building woody cd set ...
-export CODENAME=woody
+export CODENAME=sarge
 
 # By default use Debian installer packages from $CODENAME
 if [ ! "$DI_CODENAME" ]
@@ -57,7 +60,7 @@ then
 fi
 
 # Version number, "2.2 r0", "2.2 r1" etc.
-export DEBVERSION="3.0"
+export DEBVERSION="edu"
 
 # Official or non-official set.
 # NOTE: THE "OFFICIAL" DESIGNATION IS ONLY ALLOWED FOR IMAGES AVAILABLE
@@ -75,10 +78,16 @@ export ARCH=`dpkg --print-installation-architecture`
 #	      images, however. Also, if you are using an NFS partition for
 #	      some part of this, you must use this option.
 # Paths to the mirrors
-export MIRROR=/ftp/debian
+export MIRROR=$TOPDIR/debian/debian
 
 # Comment the following line if you don't have/want non-US
 #export NONUS=/ftp/debian-non-US
+
+# Include d-i stuff?
+export DEBIAN_INSTALLER=1
+
+# Use this to install Tollefs new debian-installer based install system.
+export DEBINSTALLER=true
 
 # And this option will make you 2 copies of CD1 - one with all the
 # non-US packages on it, one with none. Useful if you're likely to
@@ -86,17 +95,17 @@ export MIRROR=/ftp/debian
 #export FORCENONUSONCD1=1
 
 # Path of the temporary directory
-export TDIR=/ftp/tmp
+export TDIR=$TOPDIR/ftp/tmp
 
 # Path where the images will be written
-export OUT=/rack/debian-cd
+export OUT=$TOPDIR/ftp/sarge-cd
 
 # Where we keep the temporary apt stuff.
 # This cannot reside on an NFS mount.
-export APTTMP=/ftp/tmp/apt
+export APTTMP=$TOPDIR/ftp/tmp/apt
 
 # Do I want to have NONFREE merged in the CD set
-# export NONFREE=1
+export NONFREE=1
 
 # Do I want to have CONTRIB merged in the CD set
 export CONTRIB=1
@@ -107,13 +116,13 @@ export CONTRIB=1
 
 # If you have a $MIRROR/dists/$CODENAME/local/binary-$ARCH dir with 
 # local packages that you want to put on the CD set then
-# uncomment the following line 
-# export LOCAL=1
+# uncomment the following line
+export LOCAL=1
 
 # If your local packages are not under $MIRROR, but somewhere else, 
 # you can uncomment this line and edit to to point to a directory
 # containing dists/$CODENAME/local/binary-$ARCH
-# export LOCALDEBS=/home/joey/debian/va/debian
+export LOCALDEBS=/skolelinux/developer/local0/ftp/skolelinux/
 
 # If you want a <codename>-secured tree with a copy of the signed
 # Release.gpg and files listed by this Release file, then
@@ -122,7 +131,7 @@ export CONTRIB=1
 
 # Where to find the security patches.  This directory should be the
 # top directory of a security.debian.org mirror.
-#export SECURITY="$TOPDIR"/debian/debian-security
+export SECURITY="$TOPDIR"/debian/debian-security
 
 # Sparc only : bootdir (location of cd.b and second.b)
 # export BOOTDIR=/boot
@@ -137,8 +146,8 @@ export CONTRIB=1
 
 # Options
 # export MKISOFS=/usr/bin/mkisofs
-# export MKISOFS_OPTS="-r"		#For normal users
-# export MKISOFS_OPTS="-r -F ."	#For symlink farmers
+# export MKISOFS_OPTS="-r"             #For normal users
+# export MKISOFS_OPTS="-r -F ."        #For symlink farmers
 
 # ISOLinux support for multiboot on CD1 for i386
 export ISOLINUX=1
@@ -157,9 +166,9 @@ export DEFBINSIZE=630
 export DEFSRCSIZE=635
 
 # We don't want certain packages to take up space on CD1...
-#export EXCLUDE="$BASEDIR"/tasks/exclude-potato
+export EXCLUDE="$BASEDIR"/tasks/exclude-sarge
 # ...but they are okay for other CDs (UNEXCLUDEx == may be included on CD >= x)
-#export UNEXCLUDE2="$BASEDIR"/tasks/unexclude-CD2-potato
+export UNEXCLUDE2="$BASEDIR"/tasks/unexclude-CD2-sarge
 # Any packages listed in EXCLUDE but not in any UNEXCLUDE will be
 # excluded completely.
 
@@ -168,7 +177,7 @@ export DEFSRCSIZE=635
 
 # Set this if the recommended packages should be skipped when adding 
 # package on the CD.  The default is 'false'.
-#export NORECOMMENDS=1
+export NORECOMMENDS=1
 
 # Set this if the suggested packages should be skipped when adding 
 # package on the CD.  The default is 'true'.
@@ -225,7 +234,7 @@ export JIGDOINCLUDEURLS="http://cdimage.debian.org/debian-cd/debian-servers.jigd
 
 # If set, use the md5sums from the main archive, rather than calculating
 # them locally
-#export FASTSUMS=1
+export FASTSUMS=1
 
 # A couple of things used only by publish_cds, so it can tweak the
 # jigdo files, and knows where to put the results.
@@ -241,20 +250,20 @@ export PUBLISH_PATH="/home/jigdo-area/"
 # first stage installer (debian-installer). One package per line.
 # Lines starting with '#' are comments.  The package order is
 # important, as the packages will be installed in the given order.
-#export UDEB_INCLUDE="$BASEDIR"/data/$CODENAME/udeb_include
+export UDEB_INCLUDE="$BASEDIR"/data/$CODENAME/udeb_include
 
 # File with list of packages to exclude as above.
-#export UDEB_EXCLUDE="$BASEDIR"/data/$CODENAME/udeb_exclude
+export UDEB_EXCLUDE="$BASEDIR"/data/$CODENAME/udeb_exclude
 
 # File with list of packages to include when running debootstrap from
 # the first stage installer (currently only supported in
 # debian-installer). One package per line.  Lines starting with '#'
 # are comments.  The package order is important, as the packages will
 # be installed in the given order.
-#export BASE_INCLUDE="$BASEDIR"/data/$CODENAME/base_include
+export BASE_INCLUDE="$BASEDIR"/data/$CODENAME/base_include
 
 # File with list of packages to exclude as above.
-#export BASE_EXCLUDE="$BASEDIR"/data/$CODENAME/base_exclude
+export BASE_EXCLUDE="$BASEDIR"/data/$CODENAME/base_exclude
 
 # Only put the installer onto the cd (set NORECOMMENDS,... as well).
 # INSTALLER_CD=0: nothing special (default)
