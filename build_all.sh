@@ -58,15 +58,11 @@ do
 		make bin-official_images
 		echo Generating MD5Sums of the images
 		make imagesums
-		echo Generating list files for images
-		make pi-makelist
 
 		export OUT="$TMP_OUT/src"; mkdir -p $OUT
 		make src-official_images
 		echo Generating MD5Sums of the images
 		make imagesums
-		echo Generating list files for images
-		make pi-makelist
 	else
 		export OUT=$TMP_OUT/$ARCH; mkdir -p $OUT
 		make bin-official_images
@@ -83,8 +79,6 @@ do
 		fi
 		echo Generating MD5Sums of the images
 		make imagesums
-		echo Generating list files for images
-		make pi-makelist
 	fi
 	echo "--------------- `date` ---------------"
 done
