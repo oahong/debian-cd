@@ -52,7 +52,7 @@ FULL_SIZE=`echo "($DEFSRCSIZE - $size) * 1024 * 1024" | bc`
 make list COMPLETE=1 $SIZE_ARGS SRCSIZELIMIT=$FULL_SIZE
 echo " ... building the images"
 if [ -z "$IMAGETARGET" ] ; then
-    IMAGETARGET="bin-official_images"
+    IMAGETARGET="official_images"
 fi
 make "$IMAGETARGET"
 

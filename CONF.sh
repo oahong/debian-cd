@@ -270,3 +270,6 @@ export BASE_EXCLUDE="$BASEDIR"/data/$CODENAME/base_exclude
 # INSTALLER_CD=1: just add debian-installer (use TASK=tasks/debian-installer)
 # INSTALLER_CD=2: add d-i and base (use TASK=tasks/debian-installer+kernel)
 #export INSTALLER_CD=0
+
+# Only build binary images in build.sh
+IMAGETARGET="bin-official_images"
