@@ -1,3 +1,79 @@
+debian-cd (2.2.0) frozen unstable; urgency=low
+
+  * The final debian-cd for potato ! Must go to frozen ...
+  * Changes to tools/potato/boot-sparc for new bootdisk
+    organization. --jwest
+  * Changes to /tools/boot/potato/boot-i386 for new bootdisks --jwest
+    Closes: #59250, #64124
+  * Added missing semi-colon in the target pi-makelist.
+  * /install/boot.bat not working because of missing loadlin.exe fixed
+  * Updates to sparc bootable
+  * Updates to woody/boot-i386 --jwest
+  * Add powerpc support for potato (dan).
+  * Incorporated some documentation (courtesy of J.A. Bezemer) :
+    README.html & README.txt 
+  * Make translated documentation more easily available. Closes: #64276
+  * Added arm support (easy, they don't have bootable CD). 
+
+ -- Raphael Hertzog <hertzog@debian.org>  Thu, 18 May 2000 23:59:49 +0200
+
+debian-cd (2.1.92) frozen unstable; urgency=low
+
+  * This version goes to frozen since it's used for building potato CD.
+    Another one will follow once we have the final boot-floppies.
+    But I already upload this one because I'm getting complaints since
+    the old package doesn't work with the actual boot-floppies available
+    on the mirror...
+  * Added files for woody (yes, people already burn woody CD images)
+  * Make the second CD bootable on i386 with the "compact" image.
+  * Changes to installtools.sh, change to check for documentation
+    directory name by $ARCH.
+    -> This change will have to be removed when all arch will have synced
+    boot floppies.
+  * Changes to tools/potato/boot-i386 for support of the 2.2.3 bootdisks.
+    Closes: #53529 #58304
+  * In Makefile, if there are multiple versions of the
+    bootdisks in the source tree, the section "boot:" seems to get
+    confused. Not fixed. Temporary solution, move old i386 boot
+    disks out of the source archive.
+  * Added a file tasks/popularity-contest listing packages by order of
+    usefulness (results given by the popularity contest of course). This
+    file is included at the end of the Debian_potato task in order to
+    include the packages that are widely used on the first CD if possible.
+  * Added a bunch of set -e.
+  * Added pi-makelist target to generate the *.list files used by the
+    Pseudo Image Kit. Needs isoinfo in the cdwrite package.
+  * Updated README and README.devel. Explained that the main source
+    is on CVS and that patch should apply on the CVS tree not on the
+    source package available on the Debian FTP.
+  * Added possibility to include local packages on the CD set. Documented
+    it. Closes: #50640
+  * Documented the fact that TMP path must be on the same partition than
+    the mirror. Closes: #59524
+
+ -- Raphael Hertzog <hertzog@debian.org>  Tue,  7 Mar 2000 19:03:44 +0100
+
+debian-cd (2.1.91) unstable; urgency=low
+
+  * Splitted the boot scripts for slink & potato. Updated the Makefile
+    to handle this.
+  * Updated the tasks/Debian_potato to use the new task-* packages.
+  * New boot-i386 which does use resc2880.bin (the tecra image has
+    been removed since it does no more exist in the latest boot-floppies).
+  * Can now build CD with bootdisks taken from somewhere else than
+    the mirror (allow you to use your own boot floppies, notably those
+    built with translated documentation).
+  * The documentation from the boot-floppies are now installed
+    in /install and /doc by the scripts tools/$CODENAME/installtools.sh
+    It was needed since the documentation of the boot-floppies does
+    differ from one dist to another ...
+  * Removed some cruft which is no more needed (master for potato,
+    status.i386).
+  * Updated README to explain that the mkhybrid package in Debian
+    does support the -F option. Closes: #50141
+
+ -- Raphael Hertzog <hertzog@debian.org>  Thu, 11 Nov 1999 20:50:26 +0100
+
 debian-cd (2.1.90-1) unstable; urgency=low
 
   * Moved to contrib because of the unzip and lha dependencies.

@@ -11,14 +11,16 @@
 
 use strict;
 
-my $deflimit = shift || $ENV{'SRCSIZELIMIT'} || $ENV{'SIZELIMIT'} || 629145600;
+my $deflimit = $ENV{'SRCSIZELIMIT'} || $ENV{'SIZELIMIT'} || shift || 629145600;
 my $limit = $ENV{'SRCSIZELIMIT1'} || $deflimit;
 
 my $nonfree = $ENV{'NONFREE'};
 my $nonus = $ENV{'NONUS'} || 0;
 my $complete = $ENV{'COMPLETE'} || 0;
+my $local = $ENV{'LOCAL'} || 0;
 
 my $bdir = "$ENV{'TDIR'}/$ENV{'CODENAME'}-$ENV{'ARCH'}";
+my $adir = "$ENV{'APTTMP'}/$ENV{'CODENAME'}-$ENV{'ARCH'}";
 my $sdir = "$ENV{'TDIR'}/$ENV{'CODENAME'}-src";
 my $verbose = $ENV{'VERBOSE'} || 0;
 
@@ -61,6 +63,11 @@ if ($nonfree) {
 # Slink special case
 if ($nonus and ($codename eq "slink")) {
 	push @SOURCES, "$nonus/dists/$codename/non-US/source/Sources.gz";
+}
+
+if ($local and -e "$mirror/dists/$codename/local/source/Sources.gz")
+{
+	push @SOURCES, "$mirror/dists/$codename/local/source/Sources.gz";
 }
 
 foreach (@SOURCES) {

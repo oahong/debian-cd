@@ -1,0 +1,130 @@
+#!/bin/bash
+#
+# boot-powerpc version 0.7 (C)  Hartmut Koptein <koptein@debian.org>,
+# PReP support (C)  Matt Porter <porter@debian.org>
+#
+# Released under GPL 1 Mar 1999
+# See the file COPYING for license details
+# Released as part of the debian_cd package, not much use standalone
+#
+# Do install stuff for powerpc, including making bootable CDs
+#
+# $1 is the CD number
+# $2 is the temporary CD build dir
+
+set -e
+
+N=$1
+CDROOT=$2
+
+cd $CDROOT/..
+
+# Only disk 1 bootable
+if [ $N != 1 ]; then
+	echo -n "--netatalk -j -hfs -probe -map $BASEDIR/data/hfs.map" \
+	        > $N.mkisofs_opts
+	exit 0
+fi
+
+echo -n "--netatalk -j -hfs -probe -map $BASEDIR/data/hfs.map" \
+        > $N.mkisofs_opts
+echo -n " -prep-boot install/prep/boot.bin" >> $N.mkisofs_opts
+# For newworld Mac booting  - Note, no spaces in volid!
+echo -n " -part -no-desktop -hfs-volid Debian/PowerPC_${CODENAME}" \
+	>> $N.mkisofs_opts
+
+DISKSROOT="$MIRROR/dists/$CODENAME/main/disks-$ARCH/current"
+INSTALLDIR="$CDROOT/install"
+
+# Debian/PowerPC consits currently for three parts: CHRP, PMac and PReP
+# Apus, MBX and BBox will hopefully follow
+#
+# -- We need a generic boot-loader --
+# -- (We wish) --
+#
+cd $INSTALLDIR
+
+#-------------- Install paths -------------------------------
+# $DISKSROOT  == dists/potato/main/disks-powerpc/current/
+# $INSTALLDIR == install/
+#
+# The layout has changed. Images are now in $SUBARCH/images-1.44
+#
+
+cd $INSTALLDIR
+
+# Section for the base, rescue and drivers into the /install/
+# area on the cd.
+
+#--------------- APUS - Stuff -------------------------------
+#echo Installing APUS files
+mkdir apus
+cp $DISKSROOT/apus/linux apus
+cp $DISKSROOT/apus/images-1.44/root.bin apus
+cp $DISKSROOT/apus/images-1.44/rescue.bin apus
+
+#--------------- CHRP - Stuff -------------------------------
+echo Installing CHRP files
+mkdir chrp
+cp $DISKSROOT/chrp/linux chrp
+cp $DISKSROOT/chrp/images-1.44/root.bin chrp
+cp $DISKSROOT/chrp/images-1.44/rescue.bin chrp
+
+#-------------- Common - Stuff ------------------------------
+#echo Installing Common files
+#mkdir common
+#cp $DISKSROOT/common/linux common
+#cp $DISKSROOT/common/images-1.44/root.bin common
+#cp $DISKSROOT/common/images-1.44/rescue.bin common
+
+#---------------- MBX - Stuff -------------------------------
+#echo Installing MBX files
+#mkdir mbx
+#cp $DISKSROOT/mbx/linux mbx
+#cp $DISKSROOT/mbx/images-1.44/root.bin mbx
+#cp $DISKSROOT/mbx/images-1.44/rescue.bin mbx
+
+#--------------- PMac - Stuff -------------------------------
+echo Installing Power-Macintosh files
+mkdir powermac
+cp $DISKSROOT/powermac/linux powermac/vmlinux
+cp $DISKSROOT/powermac/images-1.44/root.bin powermac/
+cp $DISKSROOT/powermac/images-1.44/boot-floppy-hfs.img powermac/
+
+cp $DISKSROOT/powermac/BootX* powermac/
+cp $DISKSROOT/powermac/bootvars* powermac/
+
+# Completely useless!  It's an ext2 floppy... how is that supposed to boot?
+# cp $DISKSROOT/powermac/images-1.44/rescue.bin powermac/
+
+# New-world bootability
+# This works in a subdirectory via an ugly hack; fix yaboot.
+cat $BASEDIR/data/yaboot/yaboot.conf \
+ | sed "s/CODENAME/${CODENAME}/g" > powermac/yaboot.conf
+cp $BASEDIR/data/yaboot/ofboot.b powermac/
+
+# Extract yaboot from the archive
+if [ -z "$YABOOT_DEBUG" ]; then
+ (ar p $MIRROR/dists/$CODENAME/main/binary-powerpc/base/yaboot_* data.tar.gz | \
+	tar zxf - -C powermac ./boot/yaboot)
+ mv powermac/boot/yaboot powermac/yaboot
+ rmdir powermac/boot
+else
+ cp $YABOOT_DEBUG powermac/yaboot
+fi
+
+#--------------- PReP - Stuff -------------------------------
+echo Installing PReP files
+mkdir prep
+cp $DISKSROOT/prep/linux prep
+cp $DISKSROOT/prep/images-1.44/boot.bin prep
+cp $DISKSROOT/prep/images-1.44/root.bin prep
+cp $DISKSROOT/prep/images-1.44/rescue.bin prep
+
+#=============== fix a few things up... =====================
+echo Installing PowerPC FAQ and tools
+#mkdir common
+#mv basecont.txt.info common
+#mv ../README.info ../README.powerpc.info
+#cp ../README.1ST.info ../README.multicd.info
+
