@@ -1,0 +1,84 @@
+#!/bin/bash
+#
+# boot-i386 v 1.13 (c) Steve McIntyre <stevem@chiark.greenend.org.uk>
+# Released under GPL 31 Mar 1999
+# 06-10-99 jjw Added $CODENAME and $CODENAME_STATUS support 
+#
+# Heavily hacked by Raphaël Hertzog <hertzog@debian.org> for
+# YACS (the new debian-cd in potato)
+# 12MAR00  updated for current i386 bootdisks  --jwest
+#
+# Do install stuff for i386, including making bootable CDs
+#
+# $1 is the CD number
+# $2 is the temporary CD build dir
+
+set -e
+
+N=$1
+CDDIR=$2
+BOOTDIR=
+
+cd $CDDIR/..
+
+# Compact image for disk 2
+if [ $N == 2 ]; then
+	:> 2.mkisofs_opts
+	if [ -e CD1/dists/$CODENAME/main/disks-$ARCH/current/images-2.88/compact/rescue.bin ] 
+	then
+	  mkdir -p boot2/boot
+	  cp -f CD1/dists/$CODENAME/main/disks-$ARCH/current/images-2.88/compact/rescue.bin boot2/boot/
+	  echo -n "-J -b boot/rescue.bin -c boot/boot.catalog boot2" \
+		        > 2.mkisofs_opts
+	fi
+	exit 0;
+fi
+
+# Disks != 1* and not 2
+if [ $N != 1 -a $N != 1_NONUS ]; then 
+	echo -n "-J" > $N.mkisofs_opts
+	exit 0; 
+fi
+
+# Now we do disk 1 ...
+# couple of changes for 2.2.x bootdisks 27-dec-99 -- jwest
+
+echo -n "-J -b boot/rescue.bin -c boot/boot.catalog boot1" > $N.mkisofs_opts
+
+(cd $CDDIR/dists/$CODENAME/main/disks-$ARCH/current/ ; \
+	cp -f images-1.44/resc*.bin  $CDDIR/install ; \
+	cp -f linux  $CDDIR/install ; \
+	cp -f images-1.44/root.bin $CDDIR/install )
+
+mkdir -p boot1/boot
+
+##	24-Mar-2000 notes from Ben Collins on using cd as live file-system
+##	for 2.2.9 bootdisks	jwest
+# (cd $CDDIR/dists/$CODENAME/main/disks-$ARCH/current/images-1.44/ ; \
+#	gzip -dc root.bin > /tmp/root.bin.uncompressed ; \
+#	mount -o loop /tmp/root.bin.uncompressed /mnt ; \
+#	touch /mnt/cdrom_image ; \
+#	umount /mnt ; \
+#	sync ; \
+#	gzip -c9 /tmp/root.bin.uncompressed > $CDDIR/install/root.bin ; \
+#	rm /tmp/root.bin.uncompressed  )
+## end notes
+
+cp -f $CDDIR/dists/$CODENAME/main/disks-$ARCH/current/images-2.88/rescue.bin boot1/boot
+
+
+#Extracting tools for disc 1
+
+cp -f $CDDIR/dists/$CODENAME/main/disks-$ARCH/current/dosutils/* $CDDIR/install/
+
+(echo "Tools for DOS :" ; \
+	echo "lodlin/         load Linux kernel from DOS" ;\
+	echo "rawrite2/       rawrite 2.0 : create disks from disk images (*.bin)"; \
+	) |todos > $CDDIR/tools/README.tools
+
+(echo "@ echo off" ; \
+	echo "rem Flush any write-cached disk blocks before we leave DOS. " ; \
+	echo "smartdrv /c" ; \
+	echo "loadlin.exe linux root=/dev/ram ro initrd=root.bin" ; \
+	) |todos > $CDDIR/install/boot.bat
+

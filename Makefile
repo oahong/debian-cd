@@ -18,17 +18,27 @@ endif
 ifndef TASK
 TASK=$(BASEDIR)/tasks/Debian_$(CODENAME)
 endif
+ifndef CAPCODENAME
+CAPCODENAME:=$(shell perl -e "print ucfirst("$(CODENAME)")")
+endif
 ifndef BINDISKINFO
-BINDISKINFO="Debian GNU/Linux $(CODENAME) (unofficial) binary-$(ARCH) $$num/$$nb $$DATE"
+BINDISKINFO="Debian GNU/Linux $(DEBVERSION) \"$(CAPCODENAME)\" - $(OFFICIAL) $(ARCH) Binary-$$num ($$DATE)"
 endif
 ifndef SRCDISKINFO
-SRCDISKINFO="Debian GNU/Linux $(CODENAME) (unofficial) source $$num/$$nb $$DATE"
+SRCDISKINFO="Debian GNU/Linux $(DEBVERSION) \"$(CAPCODENAME)\" - $(OFFICIAL) Source-$$num ($$DATE)"
+endif
+# ND=No-Date versions for README
+ifndef BINDISKINFOND
+BINDISKINFOND="Debian GNU/Linux $(DEBVERSION) \"$(CAPCODENAME)\" - $(OFFICIAL) $(ARCH) Binary-$$num"
+endif
+ifndef SRCDISKINFOND
+SRCDISKINFOND="Debian GNU/Linux $(DEBVERSION) \"$(CAPCODENAME)\" - $(OFFICIAL) Source-$$num"
 endif
 ifndef BINVOLID
-BINVOLID="Debian-$(ARCH) $(CODENAME) Disc $$num"
+BINVOLID="Debian $(DEBVERSION) $(ARCH) Binary-$$num"
 endif
 ifndef SRCVOLID
-SRCVOLID="Debian-src $(CODENAME) Disc $$num"
+SRCVOLID="Debian $(DEBVERSION) Source-$$num"
 endif
 ifndef MKISOFS
 MKISOFS=/usr/bin/mkhybrid
@@ -37,10 +47,13 @@ ifndef MKISOFS_OPTS
 #For normal users
 MKISOFS_OPTS=-a -r -T      
 #For symlink farmers
-#MKISOFS_OPTS=-a -r -F -T  
+#MKISOFS_OPTS=-a -r -F . -T  
 endif
 ifndef HOOK
 HOOK=$(BASEDIR)/tools/$(CODENAME).hook
+endif
+ifndef BOOTDISKS
+BOOTDISKS=$(MIRROR)/dists/$(CODENAME)/main/disks-$(ARCH)
 endif
 
 ## Internal variables  
@@ -51,13 +64,42 @@ master2tasks=$(BASEDIR)/tools/master2tasks
 mirrorcheck=$(BASEDIR)/tools/mirror_check
 addpackages=$(BASEDIR)/tools/add_packages
 adddirs=$(BASEDIR)/tools/add_dirs
+add_bin_doc=$(BASEDIR)/tools/add-bin-doc
 scanpackages=$(BASEDIR)/tools/scanpackages
 scansources=$(BASEDIR)/tools/scansources
 addfiles=$(BASEDIR)/tools/add_files
 set_mkisofs_opts=$(BASEDIR)/tools/set_mkisofs_opts
+strip_nonus_bin=$(BASEDIR)/tools/strip-nonUS-bin
 
 BDIR=$(TDIR)/$(CODENAME)-$(ARCH)
+ADIR=$(APTTMP)/$(CODENAME)-$(ARCH)
 SDIR=$(TDIR)/$(CODENAME)-src
+
+FIRSTDISKS=CD1 
+ifdef FORCENONUSONCD1
+FIRSTDISKS=CD1 CD1_NONUS
+forcenonusoncd1=1
+else
+forcenonusoncd1=0
+endif
+
+## DEBUG STUFF ##
+
+PrintVars:
+	@num=1; \
+	DATE=`date +%Y%m%d` ; \
+	echo BINDISKINFO: ; \
+        echo $(BINDISKINFO) ; \
+	echo SRCDISKINFO: ; \
+        echo $(SRCDISKINFO) ; \
+	echo BINDISKINFOND: ; \
+        echo $(BINDISKINFOND) ; \
+	echo SRCDISKINFOND: ; \
+        echo $(SRCDISKINFOND) ; \
+	echo BINVOLID: ; \
+        echo $(BINVOLID) ; \
+	echo SRCVOLID: ; \
+        echo $(SRCVOLID) ; \
 
 ## CHECKS ##
 
@@ -81,6 +123,18 @@ endif
 ifndef OUT
 ok=false
 endif
+# Never use NONFREE and EXTRANONFREE at the same time
+ifdef NONFREE
+ifdef EXTRANONFREE
+ok=false
+endif
+endif
+# If we have FORCENONUSONCD1 set, we must also have NONUS set
+ifdef FORCENONUSONCD1
+ifndef NONUS
+ok=false
+endif
+endif
 
 default:
 	@echo "Please refer to the README file for more information"
@@ -94,13 +148,15 @@ ok:
 ## INITIALIZATION ##
 
 # Creation of the directories needed
-init: ok $(TDIR) $(BDIR) $(SDIR)
+init: ok $(TDIR) $(BDIR) $(SDIR) $(ADIR)
 $(TDIR):
 	@mkdir -p $(TDIR)
 $(BDIR):
 	@mkdir -p $(BDIR)
 $(SDIR):
 	@mkdir -p $(SDIR)
+$(ADIR):
+	@mkdir -p $(ADIR)
 
 ## CLEANINGS ##
 
@@ -119,6 +175,7 @@ realclean: distclean
 distclean: ok bin-distclean src-distclean
 bin-distclean:
 	@-rm -rf $(BDIR)
+	@-rm -rf $(ADIR)
 src-distclean:
 	@-rm -rf $(SDIR)
 
@@ -127,21 +184,21 @@ src-distclean:
 
 # Regenerate the status file with only packages that
 # are of priority standard or higher
-status: init $(BDIR)/status
-$(BDIR)/status:
+status: init $(ADIR)/status
+$(ADIR)/status:
 	@echo "Generating a fake status file for apt-get and apt-cache..."
 	@zcat $(MIRROR)/dists/$(CODENAME)/main/binary-$(ARCH)/Packages.gz | \
 	perl -000 -ne 's/^(Package: .*)$$/$$1\nStatus: install ok installed/m; \
 	               print if (/^Priority: (required|important|standard)/m or \
 		       /^Section: base/m);' \
-	> $(BDIR)/status
+	> $(ADIR)/status
 	# Updating the apt database
 	@$(apt) update
 	#
 	# Checking the consistence of the standard system
 	# If this does fail, then launch make correctstatus
 	#
-	@$(apt) check
+	@$(apt) check || $(MAKE) correctstatus
 
 # Only useful if the standard system is broken
 # It tries to build a better status file with apt-get -f install
@@ -153,7 +210,7 @@ correctstatus: status apt-update
 	@for i in `$(apt) deselected -f install`; do \
 		echo $$i; \
 		perl -i -000 -ne "print unless /^Package: \Q$$i\E/m" \
-		$(BDIR)/status; \
+		$(ADIR)/status; \
 	done
 	#
 	# Adding packages to the system :
@@ -162,7 +219,7 @@ correctstatus: status apt-update
 	  $(apt) cache dumpavail | perl -000 -ne \
 	      "s/^(Package: .*)\$$/\$$1\nStatus: install ok installed/m; \
 	       print if /^Package: \Q$$i\E\s*\$$/m;" \
-	       >> $(BDIR)/status; \
+	       >> $(ADIR)/status; \
 	done
 	#
 	# Showing the output of apt-get check :
@@ -179,7 +236,7 @@ apt-update: status
 deletelist: ok
 	@-rm $(BDIR)/rawlist
 	@-rm $(BDIR)/list
-	
+
 # Generates the list of packages/files to put on each CD
 list: bin-list src-list
 
@@ -188,14 +245,40 @@ bin-list: ok apt-update genlist $(BDIR)/1.packages
 $(BDIR)/1.packages:
 	@echo "Dispatching the packages on all the CDs ..."
 	@$(list2cds) $(BDIR)/list $(SIZELIMIT)
-	
+ifdef FORCENONUSONCD1
+	@for file in $(BDIR)/*.packages; do \
+	    newfile=$${file%%.packages}_NONUS.packages; \
+	    cp $$file $$newfile; \
+	    $(strip_nonus_bin) $$file $$file.tmp; \
+	    if (cmp -s $$file $$file.tmp) ; then \
+	        rm -f $$file.tmp $$newfile ; \
+	    else \
+	        echo Splitting non-US packages: $$file and $$newfile ; \
+	        mv -f $$file.tmp $$file; \
+	    fi ;\
+	done
+endif
+
 # Generate the listing for sources CDs corresponding to the packages included
 # in the binary set
 src-list: bin-list $(SDIR)/1.sources
 $(SDIR)/1.sources:
 	@echo "Dispatching the sources on all the CDs ..."
 	@$(cds2src) $(SIZELIMIT)
-	
+ifdef FORCENONUSONCD1
+	@for file in $(SDIR)/*.sources; do \
+	    newfile=$${file%%.sources}_NONUS.sources; \
+	    cp $$file $$newfile; \
+	    grep -v non-US $$file >$$file.tmp; \
+	    if (cmp -s $$file $$file.tmp) ; then \
+	        rm -f $$file.tmp $$newfile ; \
+	    else \
+	        echo Splitting non-US sources: $$file and $$newfile ; \
+	        mv -f $$file.tmp $$file; \
+	    fi ;\
+	done
+endif
+
 # Generate the complete listing of packages from the task
 # Build a nice list without doubles and without spaces
 genlist: ok $(BDIR)/list
@@ -208,54 +291,101 @@ $(BDIR)/list: $(BDIR)/rawlist
 
 # Build the raw list (cpp output) with doubles and spaces
 $(BDIR)/rawlist:
+ifdef FORCENONUSONCD1
+	@find $(NONUS)/dists/$(CODENAME) | grep binary-.*/.*deb | \
+	 sed 's/.*\///g;s/_.*//g' | sort | uniq > $(BDIR)/Debian_$(CODENAME)_nonUS
+endif
 	@perl -npe 's/\@ARCH\@/$(ARCH)/g' $(TASK) | \
 	 cpp -nostdinc -nostdinc++ -P -undef -D ARCH=$(ARCH) -D ARCH_$(ARCH) \
-	     -I $(BASEDIR)/tasks - - >> $(BDIR)/rawlist
-
+	     -DFORCENONUSONCD1=$(forcenonusoncd1) \
+	     -I $(BASEDIR)/tasks -I $(BDIR) - - >> $(BDIR)/rawlist
 
 ## DIRECTORIES && PACKAGES && INFOS ##
 
 # Create all the needed directories for installing packages (plus the
 # .disk directory)
 tree: bin-tree src-tree
-bin-tree: ok bin-list $(BDIR)/1/debian
-$(BDIR)/1/debian:
+bin-tree: ok bin-list $(BDIR)/CD1/debian
+$(BDIR)/CD1/debian:
 	@echo "Adding the required directories to the binary CDs ..."
 	@for i in $(BDIR)/*.packages; do \
 		dir=$${i%%.packages}; \
+		dir=$${dir##$(BDIR)/}; \
+		dir=$(BDIR)/CD$$dir; \
 		mkdir -p $$dir; \
 		$(adddirs) $$dir; \
 	done
-src-tree: ok src-list $(SDIR)/1/debian
-$(SDIR)/1/debian:
+
+src-tree: ok src-list $(SDIR)/CD1/debian
+$(SDIR)/CD1/debian:
 	@echo "Adding the required directories to the source CDs ..."
 	@for i in $(SDIR)/*.sources; do \
 		dir=$${i%%.sources}; \
+		dir=$${dir##$(SDIR)/}; \
+		dir=$(SDIR)/CD$$dir; \
 		mkdir -p $$dir; \
 		$(adddirs) $$dir; \
 	done
 
 # CD labels / volume ids / disk info
 infos: bin-infos src-infos
-bin-infos: bin-tree $(BDIR)/1/.disk/info
-$(BDIR)/1/.disk/info:
+bin-infos: bin-tree $(BDIR)/CD1/.disk/info
+$(BDIR)/CD1/.disk/info:
 	@echo "Generating the binary CD labels and their volume ids ..."
 	@nb=`ls -l $(BDIR)/*.packages | wc -l | tr -d " "`; num=0;\
 	 DATE=`date +%Y%m%d`; \
 	for i in $(BDIR)/*.packages; do \
 		num=$${i%%.packages}; num=$${num##$(BDIR)/}; \
-		echo -n $(BINDISKINFO) > $(BDIR)/$$num/.disk/info; \
+		dir=$(BDIR)/CD$$num; \
+		echo -n $(BINDISKINFO) | sed 's/_NONUS//g' > $$dir/.disk/info; \
+		echo '#define DISKNAME ' $(BINDISKINFOND) \
+					> $$dir/README.diskdefines; \
+		echo '#define TYPE  binary' \
+					>> $$dir/README.diskdefines; \
+		echo '#define TYPEbinary  1' \
+					>> $$dir/README.diskdefines; \
+		echo '#define ARCH ' $(ARCH) \
+					>> $$dir/README.diskdefines; \
+		echo '#define ARCH'$(ARCH) ' 1' \
+					>> $$dir/README.diskdefines; \
+		echo '#define DISKNUM ' $$num \
+					>> $$dir/README.diskdefines; \
+		echo '#define DISKNUM'$$num ' 1' \
+					>> $$dir/README.diskdefines; \
+		echo '#define TOTALNUM ' $$nb \
+					>> $$dir/README.diskdefines; \
+		echo '#define TOTALNUM'$$nb ' 1' \
+					>> $$dir/README.diskdefines; \
 		echo -n $(BINVOLID) > $(BDIR)/$${num}.volid; \
 		$(set_mkisofs_opts) bin $$num > $(BDIR)/$${num}.mkisofs_opts; \
 	done
-src-infos: src-tree $(SDIR)/1/.disk/info
-$(SDIR)/1/.disk/info:
+src-infos: src-tree $(SDIR)/CD1/.disk/info
+$(SDIR)/CD1/.disk/info:
 	@echo "Generating the source CD labels and their volume ids ..."
 	@nb=`ls -l $(SDIR)/*.sources | wc -l | tr -d " "`; num=0;\
 	 DATE=`date +%Y%m%d`; \
 	for i in $(SDIR)/*.sources; do \
 		num=$${i%%.sources}; num=$${num##$(SDIR)/}; \
-		echo -n $(SRCDISKINFO) > $(SDIR)/$$num/.disk/info; \
+		dir=$(SDIR)/CD$$num; \
+		echo -n $(SRCDISKINFO) | sed 's/_NONUS//g' > $$dir/.disk/info; \
+		echo '#define DISKNAME ' $(SRCDISKINFOND) \
+					> $$dir/README.diskdefines; \
+		echo '#define TYPE  source' \
+					>> $$dir/README.diskdefines; \
+		echo '#define TYPEsource  1' \
+					>> $$dir/README.diskdefines; \
+		echo '#define ARCH ' $(ARCH) \
+					>> $$dir/README.diskdefines; \
+		echo '#define ARCH'$(ARCH) ' 1' \
+					>> $$dir/README.diskdefines; \
+		echo '#define DISKNUM ' $$num \
+					>> $$dir/README.diskdefines; \
+		echo '#define DISKNUM'$$num ' 1' \
+					>> $$dir/README.diskdefines; \
+		echo '#define TOTALNUM ' $$nb \
+					>> $$dir/README.diskdefines; \
+		echo '#define TOTALNUM'$$nb ' 1' \
+					>> $$dir/README.diskdefines; \
 		echo -n $(SRCVOLID) > $(SDIR)/$${num}.volid; \
 		$(set_mkisofs_opts) src $$num > $(SDIR)/$${num}.mkisofs_opts; \
 	done
@@ -267,6 +397,7 @@ $(BDIR)/packages-stamp:
 	@for i in $(BDIR)/*.packages; do \
 		dir=$${i%%.packages}; \
 		n=$${dir##$(BDIR)/}; \
+		dir=$(BDIR)/CD$$n; \
 		echo "$$n ... "; \
 	  	cat $$i | xargs -n 200 -r $(addpackages) $$dir; \
 		if [ -x "$(HOOK)" ]; then \
@@ -278,6 +409,8 @@ $(BDIR)/packages-stamp:
 	@#Now install the Packages and Packages.cd files
 	@for i in $(BDIR)/*.packages; do \
 		dir=$${i%%.packages}; \
+		dir=$${dir##$(BDIR)/}; \
+		dir=$(BDIR)/CD$$dir; \
 		$(scanpackages) install $$dir; \
 	done
 	@touch $(BDIR)/packages-stamp
@@ -288,6 +421,7 @@ $(SDIR)/sources-stamp:
 	@for i in $(SDIR)/*.sources; do \
 		dir=$${i%%.sources}; \
 		n=$${dir##$(SDIR)/}; \
+		dir=$(SDIR)/CD$$n; \
 		echo -n "$$n ... "; \
 		grep -v "non-US/" $$i | xargs $(addfiles) $$dir $(MIRROR); \
 		if [ -n "$(NONUS)" ]; then \
@@ -307,9 +441,10 @@ $(BDIR)/bootable-stamp:
 	@for file in $(BDIR)/*.packages; do \
 		dir=$${file%%.packages}; \
 		n=$${dir##$(BDIR)/}; \
-		if [ -x $(BASEDIR)/tools/boot/boot-$(ARCH) ]; then \
+		dir=$(BDIR)/CD$$n; \
+		if [ -f $(BASEDIR)/tools/boot/$(CODENAME)/boot-$(ARCH) ]; then \
 			cd $(BDIR); \
-			$(BASEDIR)/tools/boot/boot-$(ARCH) $$n $$dir; \
+			$(BASEDIR)/tools/boot/$(CODENAME)/boot-$(ARCH) $$n $$dir; \
 		else \
 			echo "No script to make CDs bootable for $(ARCH) ..."; \
 			exit 1; \
@@ -319,79 +454,79 @@ $(BDIR)/bootable-stamp:
 
 # Add the doc files to the CDs and the Release-Notes and the
 # Contents-$(ARCH).gz files
-doc: ok bin-infos $(BDIR)/1/doc
-$(BDIR)/1/doc:
-	@echo "Adding the documentation ..."
-	@for i in $(BDIR)/*.packages; do \
-		dir=$${i%%.packages}; \
-		$(addfiles) $$dir $(MIRROR) doc; \
-		cp -d $(MIRROR)/README* $$dir/; \
-		if [ -e $(MIRROR)/dists/$(CODENAME)/main/Release-Notes ]; then \
-		   cp $(MIRROR)/dists/$(CODENAME)/main/Release-Notes $$dir/; \
-		fi; \
-		cp $(MIRROR)/dists/$(CODENAME)/Contents-$(ARCH).gz \
-		   $$dir/dists/$(CODENAME)/; \
-		if [ -n "$(NONUS)" ]; then \
-		   cp $(NONUS)/dists/$(CODENAME)/non-US/Contents-$(ARCH).gz \
-		      $$dir/dists/$(CODENAME)/non-US/; \
-		fi; \
-		if [ -e $(BASEDIR)/data/$(CODENAME)/README.$(ARCH) ]; then \
-		   cp $(BASEDIR)/data/$(CODENAME)/README.$(ARCH) $$dir/; \
-		fi; \
-		echo "This disc is labelled :" > $$dir/README.1ST; \
-		cat $$dir/.disk/info >>$$dir/README.1ST; \
-		echo -e "\n\n" >>$$dir/README.1ST; \
-		if [ -e $(BASEDIR)/data/$(CODENAME)/README.1ST.$(ARCH) ]; then \
-		   cat $(BASEDIR)/data/$(CODENAME)/README.1ST.$(ARCH) \
-                    >> $$dir/README.1ST; \
-		fi; \
-		todos $$dir/README.1ST; \
-		if [ -e $(BASEDIR)/data/$(CODENAME)/README.multicd ]; then \
-		   cp $(BASEDIR)/data/$(CODENAME)/README.multicd $$dir/; \
-		fi; \
+bin-doc: ok bin-infos $(BDIR)/CD1/doc
+$(BDIR)/CD1/doc:
+	@echo "Adding the documentation (bin) ..."
+	@for DISK in $(FIRSTDISKS) ; do \
+		$(addfiles) $(BDIR)/$$DISK $(MIRROR) doc; \
 	done
-	
-	
+	@$(add_bin_doc) # Common stuff for all disks
+
+src-doc: ok src-infos $(SDIR)/CD1/README.html
+$(SDIR)/CD1/README.html:
+	@echo "Adding the documentation (src) ..."
+	@for i in $(SDIR)/*.sources; do \
+		dir=$${i%%.sources}; \
+		dir=$${dir##$(SDIR)/}; \
+		dir=$(SDIR)/CD$$dir; \
+		cp -d $(MIRROR)/README* $$dir/; \
+		rm -f $$dir/README $$dir/README.1ST \
+			$$dir/README.CD-manufacture $$dir/README.multicd \
+			$$dir/README.pgp ; \
+		cpp -traditional -undef -P -C -Wall -nostdinc -I $$dir/ \
+		    -D OUTPUTtext $(BASEDIR)/data/$(CODENAME)/README.html.in \
+			| sed -e 's/%%.//g' > $$dir/README.html ; \
+		lynx -dump -force_html $$dir/README.html | todos \
+			> $$dir/README.txt ; \
+		cpp -traditional -undef -P -C -Wall -nostdinc -I $$dir/ \
+		    -D OUTPUThtml $(BASEDIR)/data/$(CODENAME)/README.html.in \
+			| sed -e 's/%%.//g' > $$dir/README.html ; \
+		rm -f $$dir/README.diskdefines ; \
+		mkdir -p $$dir/pics ; \
+		cp $(BASEDIR)/data/pics/*.jpg $$dir/pics/ ; \
+	done
 
 # Add the install stuff on the first CD
-installtools: ok doc disks $(BDIR)/1/tools
-$(BDIR)/1/tools:
+installtools: ok bin-doc disks $(BDIR)/CD1/tools
+$(BDIR)/CD1/tools:
 	@echo "Adding install tools and documentation ..."
-	@$(addfiles) $(BDIR)/1 $(MIRROR) tools
-	@mkdir $(BDIR)/1/install
-	@cd \
-	 $(BDIR)/1/dists/$(CODENAME)/main/disks-$(ARCH)/current; \
-	 cp *.html *.txt $(BDIR)/1/install/
-	@ln -sf install.html $(BDIR)/1/install/index.html
-	@cd $(BDIR)/1/doc; \
-	 for file in ../install/*.{html,txt}; do ln -s $$file; done
+	@for DISK in $(FIRSTDISKS) ; do \
+		$(addfiles) $(BDIR)/$$DISK $(MIRROR) tools ; \
+		mkdir $(BDIR)/$$DISK/install ; \
+		if [ -x "$(BASEDIR)/tools/$(CODENAME)/installtools.sh" ]; then \
+			$(BASEDIR)/tools/$(CODENAME)/installtools.sh $(BDIR)/$$DISK ; \
+		fi ; \
+	done
 
 # Add the disks-arch directories where needed
-disks: ok bin-infos $(BDIR)/1/dists/$(CODENAME)/main/disks-$(ARCH)
-$(BDIR)/1/dists/$(CODENAME)/main/disks-$(ARCH):
+disks: ok bin-infos $(BDIR)/CD1/dists/$(CODENAME)/main/disks-$(ARCH)
+$(BDIR)/CD1/dists/$(CODENAME)/main/disks-$(ARCH):
 	@echo "Adding disks-$(ARCH) stuff ..."
-	@mkdir -p \
-	    $(BDIR)/1/dists/$(CODENAME)/main/disks-$(ARCH)
-	@$(addfiles) \
-	  $(BDIR)/1/dists/$(CODENAME)/main/disks-$(ARCH) \
-	  $(MIRROR)/dists/$(CODENAME)/main/disks-$(ARCH) .
-	@#Keep only one copy of the disks stuff
-	@cd $(BDIR)/1/dists/$(CODENAME)/main/disks-$(ARCH); \
-	if [ "$(SYMLINK)" != "" ]; then exit 0; fi; \
-	if [ -L current ]; then \
-		CURRENT_LINK=`ls -l current | awk '{print $$11}'`; \
-		mv $$CURRENT_LINK .tmp_link; \
-		rm -rf [0123456789]*; \
- 		mv .tmp_link $$CURRENT_LINK; \
-	elif [ -d current ]; then \
-		rm -rf [0123456789]*; \
-	fi;
+	@for DISK in $(FIRSTDISKS) ; do \
+		mkdir -p $(BDIR)/$$DISK/dists/$(CODENAME)/main/disks-$(ARCH) ; \
+		$(addfiles) \
+	  	$(BDIR)/$$DISK/dists/$(CODENAME)/main/disks-$(ARCH) \
+	  	$(BOOTDISKS) . ; \
+		cd $(BDIR)/$$DISK/dists/$(CODENAME)/main/disks-$(ARCH); \
+		if [ "$(SYMLINK)" != "" ]; then exit 0; fi; \
+		if [ -L current ]; then \
+			CURRENT_LINK=`ls -l current | awk '{print $$11}'`; \
+			mv $$CURRENT_LINK .tmp_link; \
+			rm -rf [0123456789]*; \
+			mv .tmp_link $$CURRENT_LINK; \
+		elif [ -d current ]; then \
+			rm -rf [0123456789]*; \
+		fi; \
+	done
 
 upgrade: ok bin-infos $(BDIR)/upgrade-stamp
 $(BDIR)/upgrade-stamp:
 	@echo "Trying to add upgrade* directories ..."
 	@if [ -x "$(BASEDIR)/tools/$(CODENAME)/upgrade.sh" ]; then \
 		$(BASEDIR)/tools/$(CODENAME)/upgrade.sh; \
+	 fi
+	@if [ -x "$(BASEDIR)/tools/$(CODENAME)/upgrade-$(ARCH).sh" ]; then \
+		$(BASEDIR)/tools/$(CODENAME)/upgrade-$(ARCH).sh; \
 	 fi
 	@touch $(BDIR)/upgrade-stamp
 
@@ -404,14 +539,14 @@ bin-extras: ok
 	  echo "Give me more parameters (DIR, CD and ROOTSRC are required)."; \
 	  false; \
 	fi
-	@echo "Adding dirs `$(DIR)' from `$(ROOTSRC)' to `$(BDIR)/$(CD)'" ...
+	@echo "Adding dirs '$(DIR)' from '$(ROOTSRC)' to '$(BDIR)/$(CD)'" ...
 	@$(addfiles) $(BDIR)/$(CD) $(ROOTSRC) $(DIR)
 src-extras:
 	@if [ -z "$(DIR)" -o -z "$(CD)" -o -z "$(ROOTSRC)" ]; then \
 	  echo "Give me more parameters (DIR, CD and ROOTSRC are required)."; \
 	  false; \
 	fi
-	@echo "Adding dirs `$(DIR)' from `$(ROOTSRC)' to `$(SDIR)/$(CD)'" ...
+	@echo "Adding dirs '$(DIR)' from '$(ROOTSRC)' to '$(SDIR)/$(CD)'" ...
 	@$(addfiles) $(SDIR)/$(CD) $(ROOTSRC) $(DIR)
 
 ## IMAGE BUILDING ##
@@ -429,23 +564,26 @@ src-imagesinfo: ok
 
 # Generate a md5sum.txt file listings all files on the CD
 md5list: bin-md5list src-md5list
-bin-md5list: ok packages $(BDIR)/1/md5sum.txt
-$(BDIR)/1/md5sum.txt:
+bin-md5list: ok packages $(BDIR)/CD1/md5sum.txt
+$(BDIR)/CD1/md5sum.txt:
 	@echo "Generating md5sum of files from all the binary CDs ..."
 	@for file in $(BDIR)/*.packages; do \
 		dir=$${file%%.packages}; \
 		n=$${dir##$(BDIR)/}; \
+		dir=$(BDIR)/CD$$n; \
 		test -x "$(HOOK)" && cd $(BDIR) && $(HOOK) $$n before-mkisofs; \
 		cd $$dir; \
 		find . -follow -type f | grep -v "\./md5sum" | grep -v \
 		"dists/stable" | grep -v "dists/frozen" | \
 		grep -v "dists/unstable" | xargs md5sum > md5sum.txt ; \
 	done
-src-md5list: ok sources $(SDIR)/1/md5sum.txt
-$(SDIR)/1/md5sum.txt:
+src-md5list: ok sources $(SDIR)/CD1/md5sum.txt
+$(SDIR)/CD1/md5sum.txt:
 	@echo "Generating md5sum of files from all the source CDs ..."
 	@for file in $(SDIR)/*.sources; do \
 		dir=$${file%%.sources}; \
+		dir=$${dir##$(SDIR)/}; \
+		dir=$(SDIR)/CD$$dir; \
 		cd $$dir; \
 		find . -follow -type f | grep -v "\./md5sum" | grep -v \
 		"dists/stable" | grep -v "dists/frozen" | \
@@ -459,48 +597,60 @@ bin-images: ok bin-md5list $(OUT)
 	@for file in $(BDIR)/*.packages; do \
 		dir=$${file%%.packages}; \
 		n=$${dir##$(BDIR)/}; \
+		dir=$(BDIR)/CD$$n; \
 		cd $$dir/..; \
-		opts=`cat $$dir.mkisofs_opts`; \
-		volid=`cat $$dir.volid`; \
+		opts=`cat $(BDIR)/$$n.mkisofs_opts`; \
+		volid=`cat $(BDIR)/$$n.volid`; \
 		rm -f $(OUT)/$(CODENAME)-$(ARCH)-$$n.raw; \
 		$(MKISOFS) $(MKISOFS_OPTS) -V "$$volid" \
-		  -o $(OUT)/$(CODENAME)-$(ARCH)-$$n.raw $$opts $$n ; \
+		  -o $(OUT)/$(CODENAME)-$(ARCH)-$$n.raw $$opts CD$$n ; \
+		if [ -f $(BASEDIR)/tools/boot/$(CODENAME)/post-boot-$(ARCH) ]; then \
+			$(BASEDIR)/tools/boot/$(CODENAME)/post-boot-$(ARCH) $$n $$dir \
+			 $(OUT)/$(CODENAME)-$(ARCH)-$$n.raw; \
+		fi \
 	done
 src-images: ok src-md5list $(OUT)
 	@echo "Generating the source iso images ..."
 	@for file in $(SDIR)/*.sources; do \
 		dir=$${file%%.sources}; \
 		n=$${dir##$(SDIR)/}; \
+		dir=$(SDIR)/CD$$n; \
 		cd $$dir/..; \
-		opts=`cat $$dir.mkisofs_opts`; \
-		volid=`cat $$dir.volid`; \
+		opts=`cat $(SDIR)/$$n.mkisofs_opts`; \
+		volid=`cat $(SDIR)/$$n.volid`; \
 		rm -f $(OUT)/$(CODENAME)-src-$$n.raw; \
 		$(MKISOFS) $(MKISOFS_OPTS) -V "$$volid" \
-		  -o $(OUT)/$(CODENAME)-src-$$n.raw $$opts $$n ; \
+		  -o $(OUT)/$(CODENAME)-src-$$n.raw $$opts CD$$n ; \
 	done
 
+# Generate the *.list files for the Pseudo Image Kit
+pi-makelist:
+	@cd $(OUT); for file in `find * -name \*.raw`; do \
+		$(BASEDIR)/tools/pi-makelist \
+			$$file > $${file%%.raw}.list; \
+	done
 
 # Generate only one image number $(CD)
 image: bin-image
 bin-image: ok bin-md5list $(OUT)
 	@echo "Generating the binary iso image n°$(CD) ..."
 	@test -n "$(CD)" || (echo "Give me a CD=<num> parameter !" && false)
-	@dir=$(BDIR)/$(CD); cd $(BDIR); opts=`cat $$dir.mkisofs_opts`; \
-	 volid=`cat $$dir.volid`; rm -f $(OUT)/$(CODENAME)-$(ARCH)-$(CD).raw; \
+	cd $(BDIR); opts=`cat $(CD).mkisofs_opts`; \
+	 volid=`cat $(CD).volid`; rm -f $(OUT)/$(CODENAME)-$(ARCH)-$(CD).raw; \
 	  $(MKISOFS) $(MKISOFS_OPTS) -V "$$volid" \
-	  -o $(OUT)/$(CODENAME)-$(ARCH)-$(CD).raw $$opts $(CD)
+	  -o $(OUT)/$(CODENAME)-$(ARCH)-$(CD).raw $$opts CD$(CD)
 src-image: ok src-md5list $(OUT)
 	@echo "Generating the source iso image n°$(CD) ..."
 	@test -n "$(CD)" || (echo "Give me a CD=<num> parameter !" && false)
-	@dir=$(SDIR)/$(CD); cd $(SDIR); opts=`cat $$dir.mkisofs_opts`; \
-	 volid=`cat $$dir.volid`; rm -f $(OUT)/$(CODENAME)-src-$(CD).raw; \
+	cd $(SDIR); opts=`cat $(CD).mkisofs_opts`; \
+	 volid=`cat $(CD).volid`; rm -f $(OUT)/$(CODENAME)-src-$(CD).raw; \
          $(MKISOFS) $(MKISOFS_OPTS) -V "$$volid" \
-	  -o $(OUT)/$(CODENAME)-src-$(CD).raw $$opts $(CD)
+	  -o $(OUT)/$(CODENAME)-src-$(CD).raw $$opts CD$(CD)
 
 
 #Calculate the md5sums for the images
 imagesums:
-	@cd $(OUT); :> MD5SUMS; for file in *.raw; do \
+	@cd $(OUT); :> MD5SUMS; for file in `find * -name \*.raw`; do \
 	      md5sum $$file >>MD5SUMS; \
 	 done
 
@@ -521,9 +671,9 @@ mirrorcheck: ok apt-update
 # Little trick to simplify things
 official_images: bin-official_images src-official_images
 bin-official_images: ok bootable upgrade bin-images
-src-official_images: ok src-images
+src-official_images: ok src-doc src-images
 
 $(CODENAME)_status: ok init
 	@echo "Using the provided status file for $(CODENAME)-$(ARCH) ..."
-	@cp $(BASEDIR)/data/$(CODENAME)/status.$(ARCH) $(BDIR)/status \
+	@cp $(BASEDIR)/data/$(CODENAME)/status.$(ARCH) $(ADIR)/status \
 	 2>/dev/null || $(MAKE) status || $(MAKE) correctstatus

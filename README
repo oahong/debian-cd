@@ -1,5 +1,6 @@
 YACS - Yet Another CD Script :-)
 ================================
+(better known as debian-cd)
 
 Copyright 1999 Raphaël Hertzog <hertzog@debian.org>
 This set of tools is licensed under the General Public License
@@ -9,6 +10,8 @@ version 2 or any later version. You can find it in
 Thanks to Steve McIntyre <stevem@chiark.greenend.org.uk> for his
 work on slink_cd/debian_cd. Some ideas come from his script.
 
+Thanks to all the contributors on the debian-cd mailing list.
+
 What is needed ?
 ================
 Software :
@@ -16,10 +19,12 @@ Software :
 - perl (>= 5.004)
 - bash (or another POSIX shell)
 - make
-- mkisofs/mkhybrid
+- mkisofs/mkhybrid (mkisofs also provides the isoinfo binary used by the
+  Pseudo Image Kit)
 - dpkg-multicd package (for dpkg-scanpackages with -m option)
 - the perl MD5 module
 - dpkg-dev (>= 1.4.1.6) (for dpkg-scansources)
+- lynx (for text version of README.html)
 Other :
 - lots of free space on your disks
 - a Debian mirror (on a partition where you can write, if you can't write
@@ -29,25 +34,28 @@ Other :
 		-------------------------------
 		- GENERATING DEBIAN CD IMAGES -
 		-------------------------------
-		
+
+
 For people that do not have time, here's the quick explanation :
 ================================================================
 
 Edit the CONF.sh and change the PATHs for the mirror and so on.
 $ vim CONF.sh
 $ . CONF.sh
-$ make potato_status
-$ make list COMPLETE=1 SIZELIMIT1=576716800
+$ make distclean
+$ make status
+$ make list COMPLETE=1 SIZELIMIT1=555000000 SRCSIZELIMIT=665000000
 $ make official_images
 [ or if you want only binary images :
   $ make bin-official_images ]
 
 But you really should consider reading further for more information.
 
+
 How to build a CD set - step by step
 ====================================
 
-If not yet done, first decompact the archive and cd to the "yacs" directory.
+If not yet done, cd to the /usr/share/debian-cd/ directory.
 
 The process of building a CD is decomposed as follow :
 
@@ -61,21 +69,24 @@ The process of building a CD is decomposed as follow :
   have to build them one after the other (you may use a shell
   script for this).
 
+  Note that the temporary dir must be on the same device than the
+  mirror because debian-cd uses hardlinks for generating an image 
+  tree. If you can't do this, you'll have to use the symlink farm.
+  The symlink farm is explained at the end of this README.
+
+- let's clean everything that may still be there from previous runs :
+  $ make distclean
+
 - now we'll check if your mirror is ok (with good Packages files) :
   $ make mirrorcheck
 
 - then you will have to launch this for initializing the
   temporary directory used for the build :
   $ make status
-  If this has failed then you'll have to launch :
+  If this has failed then this will be automatically launched :
   $ make correctstatus
   However note that make status should never fail if it is
   used for building a CD set for the stable release ...
-
-  NOTE: Actually (11/7/99) potato is in a bad state, I advise you
-  to use the potato.status file in the data dir as your status file,
-  to do so you can launch : 
-  $ make potato_status
 
 - now you can decide what you want on your CDs
   $ make list TASK=tasks/debian-2.2 COMPLETE=1
@@ -83,8 +94,9 @@ The process of building a CD is decomposed as follow :
   $ make list TASK=tasks/gnome COMPLETE=0 SIZELIMIT=576716800
   or
   $ export NONFREE=1; make list TASK=tasks/kde COMPLETE=1
-  or for something like an official image for the USA :
-  $ make COMPLETE=1 NONUS=0 NONFREE=0 SIZELIMIT1=576716800
+  or for something like an official image for the USA (without non-US &
+  non-free) :
+  $ make COMPLETE=1 SIZELIMIT1=576716800
   .... take a look at the file tasks/* to see the options you can have :)
   
   You can change the behaviour of this command with the following
@@ -92,8 +104,18 @@ The process of building a CD is decomposed as follow :
   - if NONUS is set, then packages from non-US will be allowed (remember
     that the value of NONUS must be the path to the non-US mirror
     if you have one)
+  - if FORCENONUSONCD1 is set also, then packages will be
+    rearranged so that non-US packages are all on CD#1. This
+    includes the non-free ones if you specify NONFREE. Then 2 separate
+    copies of CD#1 will be produced, identical in every respect except
+    for the inclusion/lack of non-US packages. The same happens for
+    the source CDs when they are built.
   - if NONFREE is set, then packages from non-free will be allowed
     (NONFREE must be exported to all sub-shells)
+  - if EXTRANONFREE is set, then non-free packages will be included
+    on an extra CD (the last CD in fact). Don't use NONFREE and
+    EXTRANONFREE at the same time !
+    (EXTRANONFREE must be exported to all sub-shells)
   - if COMPLETE is set, all packages that are not listed in the
     selected task file will be included at the end
   - if SIZELIMIT is set, it will be used as the maximum size that
@@ -111,6 +133,13 @@ The process of building a CD is decomposed as follow :
 - it may be time to add the disks-arch stuff and to make the CDs bootable
   $ make bootable
   This does affect only the binary CDs.
+
+  If you want to use boot-floppies built by yourself you can give
+  a parameter BOOTDISKS=<dir> giving the directory where
+  they are (note that $BOOTDISKS/current must be a symlink to the
+  real directory, it must follow the same setup than in the FTP
+  mirror). Your boot-floppies must also be on the same partiton than
+  your mirror & temporary dir (hardlinks are used here too).
 
 - now, we'll add the binary packages to the temporary tree :
   $ make packages
@@ -146,7 +175,45 @@ The process of building a CD is decomposed as follow :
   $ make bin-images
   And "make src-images" will generate the sources images.
 
-  
+- if you want to generate a MD5SUMS file with the md5sums of the
+  images you can do it with :
+  $ make imagesums
+
+
+Local packages
+==============
+
+If you provide some custom made packages and you want to put them on
+Debian CD set you can do it. Simply put your packages in
+$MIRROR/dists/$CODENAME/local/binary-$ARCH/<section>.
+The organization of this sub-tree is the same than what you can find
+in the main, contrib or non-free part. You may use different section
+names if you want. Be sure to create Packages files (and Sources.gz if you
+include sources). 
+
+To include local packages, the LOCAL environment variable must be set
+to "1" while building the CDs.
+
+You can also set the LOCALDEBS environment variable, and it will be used
+instead of MIRROR when looking for local packages.
+
+Additionnal targets
+===================
+
+Pseudo Image Kit
+----------------
+Those of you, who will make images available to people for download may
+consider using the Pseudo Image Kit (cf http://cdimage.debian.org for more
+information). That's why you can launch "make pi-makelist" that will generate
+the *.list files for the images you've just generated.
+
+The tools/pi-makelist script needs the isoinfo binary. You can get the
+sources from http://www.fokus.gmd.de/research/cc/glone/employees/joerg.schilling/private/cdrecord.html
+
+Alternatively (and certainly simpler for people using Debian system), the
+isoinfo binary is in the mkisofs package (since Debian potato at least).
+
+
 About the hook system
 =====================
 
@@ -179,3 +246,5 @@ Note that you will also need a patched mkhybrid that does support the
 -F option. Have a look here about it :
 http://www.chiark.greenend.org.uk/~stevem/DebianCD/
 
+The mkhybrid package in Debian does support this -F option since 
+potato (Debian 2.2).
