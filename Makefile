@@ -71,7 +71,7 @@ JIGDOSCRIPT=$(BASEDIR)/tools/jigdo_header
 endif
 
 ifndef UDEB_INCLUDE
-# Netinst/businesscard CD should have udeb_include file by default
+# Netinst/businesscard CD have different udeb_include files
 ifeq ($(INSTALLER_CD),1)
 UDEB_INCLUDE=$(BASEDIR)/data/$(DI_CODENAME)/$(ARCH)_businesscard_udeb_include
 endif
@@ -79,6 +79,11 @@ ifeq ($(INSTALLER_CD),2)
 UDEB_INCLUDE=$(BASEDIR)/data/$(DI_CODENAME)/$(ARCH)_netinst_udeb_include
 endif
 endif
+# Default udeb_include files.
+ifndef UDEB_INCLUDE
+UDEB_INCLUDE=$(BASEDIR)/data/$(DI_CODENAME)/$(ARCH)_udeb_include
+endif
+
 
 ## Internal variables  
 apt=$(BASEDIR)/tools/apt-selection
@@ -202,13 +207,13 @@ unstable-map:
 # CLeans the current arch tree (but not packages selection info)
 clean: ok bin-clean src-clean
 bin-clean:
-	$(Q)rm -rf $(BDIR)/CD[1234567890]
+	$(Q)rm -rf $(BDIR)/CD[1234567890]*
 	$(Q)rm -rf $(BDIR)/*_NONUS
 	$(Q)rm -f $(BDIR)/*.filelist*
 	$(Q)rm -f  $(BDIR)/packages-stamp $(BDIR)/bootable-stamp \
 	         $(BDIR)/upgrade-stamp $(BDIR)/secured-stamp
 src-clean:
-	$(Q)rm -rf $(SDIR)/CD[1234567890]
+	$(Q)rm -rf $(SDIR)/CD[1234567890]*
 	$(Q)rm -rf $(SDIR)/*_NONUS
 	$(Q)rm -rf $(SDIR)/sources-stamp $(SDIR)/secured-stamp
 
@@ -1031,23 +1036,23 @@ conf:
 mirrorcheck: ok apt-update
 	$(Q)$(apt) cache dumpavail | $(mirrorcheck)
 
-update-popcon: tasks/popularity-contest-$(CODENAME)
-tasks/popularity-contest-$(CODENAME):
+update-popcon:
 	rm -f popcon-inst
 	( \
 		echo '/*' ; \
 		echo '   Popularity Contest results' ; \
 		echo '   See the README for details on updating.' ; \
 		echo '' ; \
-		echo '   Last update: $$''Date''$$' ; \
+		echo '   Last update: $(shell date)' ; \
 		echo '*/' ; \
 		echo '' ; \
-	) > $@
+	) > tasks/popularity-contest-$(CODENAME)
 	wget --output-document popcon-inst \
 		http://popcon.debian.org/main/by_inst \
 		http://popcon.debian.org/contrib/by_inst
 	grep -h '^[^#]' popcon-inst | egrep -v '(Total|-----)' | \
-		sort -rn -k3,3 -k7,7 -k4,4 | awk '{print $$2}' >> $@
+		sort -rn -k3,3 -k7,7 -k4,4 | grep -v kernel-source | \
+		awk '{print $$2}' >> tasks/popularity-contest-$(CODENAME)
 	rm -f popcon-inst
 
 # Little trick to simplify things

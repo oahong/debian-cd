@@ -1,3 +1,7 @@
+#
+# This file will have to be sourced where needed
+#
+
 # Unset all optional variables first to start from a clean state
 unset NONUS             || true
 unset FORCENONUSONCD1   || true
@@ -22,23 +26,30 @@ unset NOSUGGESTS        || true
 unset DOJIGDO           || true
 unset JIGDOCMD          || true
 unset JIGDOTEMPLATEURL  || true
+unset JIGDOFALLBACKURLS || true
+unset JIGDOINCLUDEURLS  || true
+unset JIGDOSCRIPT       || true
 unset DEFBINSIZE        || true
 unset DEFSRCSIZE        || true
 unset FASTSUMS          || true
 unset PUBLISH_URL       || true
 unset PUBLISH_NONUS_URL || true
 unset PUBLISH_PATH      || true
+unset UDEB_INCLUDE      || true
+unset UDEB_EXCLUDE      || true
+unset BASE_INCLUDE      || true
+unset BASE_EXCLUDE      || true
 unset INSTALLER_CD      || true
 unset DI_CODENAME       || true
 unset MAXCDS            || true
 unset SPLASHPNG         || true
 
-
 # The debian-cd dir
-export BASEDIR=/usr/share/debian-cd
+# Where I am (hoping I'm in the debian-cd dir)
+export BASEDIR=`pwd`
 
-# Building woody cd set ...
-export CODENAME=woody
+# Building sarge cd set ...
+export CODENAME=sarge
 
 # By default use Debian installer packages from $CODENAME
 if [ ! "$DI_CODENAME" ]
@@ -46,8 +57,14 @@ then
   export DI_CODENAME=$CODENAME
 fi
 
+# If set, controls where the d-i components are downloaded from.
+# This may be an url, or "default", which will make it use the default url
+# for the daily d-i builds. If not set, uses the official d-i images from
+# the Debian mirror.
+#export DI_WWW_HOME=default
+
 # Version number, "2.2 r0", "2.2 r1" etc.
-export DEBVERSION="3.0"
+export DEBVERSION="3.1"
 
 # Official or non-official set.
 # NOTE: THE "OFFICIAL" DESIGNATION IS ONLY ALLOWED FOR IMAGES AVAILABLE
@@ -65,7 +82,7 @@ export ARCH=`dpkg --print-installation-architecture`
 #	      images, however. Also, if you are using an NFS partition for
 #	      some part of this, you must use this option.
 # Paths to the mirrors
-export MIRROR=/home/ftp/debian
+export MIRROR=/ftp/debian
 
 # Comment the following line if you don't have/want non-US
 #export NONUS=/ftp/debian-non-US
@@ -76,14 +93,14 @@ export MIRROR=/home/ftp/debian
 #export FORCENONUSONCD1=1
 
 # Path of the temporary directory
-export TDIR=/home/ftp/tmp
+export TDIR=/ftp/tmp
 
 # Path where the images will be written
-export OUT=/home/ftp/debian-cd
+export OUT=/rack/debian-cd
 
 # Where we keep the temporary apt stuff.
 # This cannot reside on an NFS mount.
-export APTTMP=/home/ftp/tmp/apt
+export APTTMP=/ftp/tmp/apt
 
 # Do I want to have NONFREE merged in the CD set
 # export NONFREE=1
@@ -147,9 +164,9 @@ export DEFBINSIZE=630
 export DEFSRCSIZE=635
 
 # We don't want certain packages to take up space on CD1...
-#export EXCLUDE="$BASEDIR"/tasks/exclude-potato
+export EXCLUDE="$BASEDIR"/tasks/exclude-sarge
 # ...but they are okay for other CDs (UNEXCLUDEx == may be included on CD >= x)
-#export UNEXCLUDE2="$BASEDIR"/tasks/unexclude-CD2-potato
+export UNEXCLUDE2="$BASEDIR"/tasks/unexclude-CD2-sarge
 # Any packages listed in EXCLUDE but not in any UNEXCLUDE will be
 # excluded completely.
 
@@ -158,7 +175,7 @@ export DEFSRCSIZE=635
 
 # Set this if the recommended packages should be skipped when adding 
 # package on the CD.  The default is 'false'.
-#export NORECOMMENDS=1
+export NORECOMMENDS=1
 
 # Set this if the suggested packages should be skipped when adding 
 # package on the CD.  The default is 'true'.
@@ -179,18 +196,47 @@ export DEFSRCSIZE=635
 # Note: building the cache takes hours, so keep it around for the next run
 #export JIGDOCMD="/usr/local/bin/jigdo-file --cache=$HOME/jigdo-cache.db"
 #
-# HTTP/FTP URL for directory where you intend to make the templates available.
-# %ARCH%, if present, will be replaced by $ARCH (or "source"). This only goes
-# in the .jigdo files, which you can edit easily if you want.
-# No trailing slash.
-#export JIGDOTEMPLATEURL="http://this-guy-didnt-configure-debiancd-correctly.com/debian-cd/templates/3.0BETA/%ARCH%"
+# HTTP/FTP URL for directory where you intend to make the templates
+# available. You should not need to change this; the default value ""
+# means "template in same dir as the .jigdo file", which is usually
+# correct. If it is non-empty, it needs a trailing slash. "%ARCH%"
+# will be substituted by the current architecture.
+#export JIGDOTEMPLATEURL=""
+#
+# Name of a directory on disc to create data for a fallback server in. 
+# Should later be made available by you at the URL given in
+# JIGDOFALLBACKURLS. In the directory, two subdirs named "Debian" and
+# "Non-US" will be created, and filled with hard links to the actual
+# files in your FTP archive. Because of the hard links, the dir must
+# be on the same partition as the FTP archive! If unset, no fallback
+# data is created, which may cause problems - see README.
+#export JIGDOFALLBACKPATH="$(OUT)/snapshot/"
+#
+# Space-separated list of label->URL mappings for "jigdo fallback
+# server(s)" to add to .jigdo file. If unset, no fallback URL is
+# added, which may cause problems - see README.
+#export JIGDOFALLBACKURLS="Debian=http://myserver/snapshot/Debian/ Non-US=http://myserver/snapshot/Non-US/"
+#
+# Space-separated list of "include URLs" to add to the .jigdo file. 
+# The included files are used to provide an up-to-date list of Debian
+# mirrors to the jigdo _GUI_application_ (_jigdo-lite_ doesn't support
+# "[Include ...]").
+export JIGDOINCLUDEURLS="http://cdimage.debian.org/debian-cd/debian-servers.jigdo"
+#
+# $JIGDOTEMPLATEURL and $JIGDOINCLUDEURLS are passed to
+# "tools/jigdo_header", which is used by default to generate the
+# [Image] and [Servers] sections of the .jigdo file. You can provide
+# your own script if you need the .jigdo file to contain different
+# data.
+#export JIGDOSCRIPT="myscript"
 
 # If set, use the md5sums from the main archive, rather than calculating
 # them locally
 #export FASTSUMS=1
 
-# a couple of things used by publish_cds, so it can tweak the jigdo files,
-# and knows where to put the results
+# A couple of things used only by publish_cds, so it can tweak the
+# jigdo files, and knows where to put the results.
+# You need to run publish_cds manually, it is not run by the Makefile.
 export PUBLISH_URL="http://cdimage.debian.org/jigdo-area"
 export PUBLISH_NONUS_URL="http://non-US.cdimage.debian.org/jigdo-area"
 export PUBLISH_PATH="/home/jigdo-area/"
@@ -210,8 +256,8 @@ export PUBLISH_PATH="/home/jigdo-area/"
 # File with list of packages to include when running debootstrap from
 # the first stage installer (currently only supported in
 # debian-installer). One package per line.  Lines starting with '#'
-# are comments.  The package order is important, when will be
-# installed in the given order.
+# are comments.  The package order is important, as the packages will
+# be installed in the given order.
 #export BASE_INCLUDE="$BASEDIR"/data/$CODENAME/base_include
 
 # File with list of packages to exclude as above.
@@ -232,3 +278,8 @@ export PUBLISH_PATH="/home/jigdo-area/"
 
 # If set, overrides the boot picture used.
 #export SPLASHPNG="$BASEDIR/data/$CODENAME/splash-img.png"
+
+# Used by build.sh to determine what to build, this is the name of a target
+# in the Makefile. Use bin-official_images to build only binary CDs. The
+# default, official_images, builds everything.
+#IMAGETARGET=official_images

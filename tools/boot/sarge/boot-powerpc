@@ -14,7 +14,7 @@ N=$1
 CDDIR=$2
 INSTALLDIR=$CDDIR/install
 if [ "$DI_WWW_HOME" = "default" ];then
-   DI_WWW_HOME="http://people.debian.org/~luther/debian-installer/daily-powerpc-built/current"
+   DI_WWW_HOME="http://people.debian.org/~luther/d-i/images/daily"
 fi
 if [ ! "$DI_DIST" ]; then
    DI_DIST="$DI_CODENAME"
@@ -31,13 +31,25 @@ fi
 
 install_languages $CDDIR
 
-echo -n "--netatalk -hfs -probe -map $BASEDIR/data/hfs.map" \
+echo -n "--chrp-boot --netatalk -hfs -probe -map $BASEDIR/data/hfs.map" \
         > $N.mkisofs_opts
 # We are still missing this for prep
 #echo -n " -prep-boot install/prep/boot.bin" >> $N.mkisofs_opts
 # For newworld Mac booting  - Note, no spaces in volid!
 echo -n " -part -no-desktop -hfs-bless CD$N/install -hfs-volid Debian/PowerPC_${CODENAME}" \
 	>> $N.mkisofs_opts
+# Recommended size for a HFS Catalog is 4 megas per giga, defaults to 4 megas
+if [ -n "$SIZELIMIT1" ];then
+  if [ "$SIZELIMIT1" -gt 1000000000 ];then
+    let newsize="$SIZELIMIT1"/256
+    echo "-hfs-parms MAX_XTCSIZE=$newsize" >> $N.mkisofs_opts
+  fi
+else
+  if [ -n "$SIZELIMIT" ] && [ "$SIZELIMIT" -gt 1000000000 ];then
+    let newsize="$SIZELIMIT"/256
+    echo "-hfs-parms MAX_XTCSIZE=$newsize" >> $N.mkisofs_opts
+  fi
+fi
 
 cd $INSTALLDIR
 # Extract yaboot from the archive
@@ -72,8 +84,20 @@ do
   else
 	DI_DIR="di_stuff"
 	wget -r -nd --no-parent --level=1 -P "$DI_DIR" "$DI_WWW_HOME/$subarch/cdrom/"
+	# One of these two wgets will fail; the price of maintaining
+	# compatibility. The 2.4/2.6 duplication can go away once the new
+	# debian-installer image layout reaches sarge.
+	wget -r -nd --no-parent --level=1 -P "$DI_DIR/2.4" "$DI_WWW_HOME/$subarch/cdrom/2.4/"
 	wget -r -nd --no-parent --level=1 -P "$DI_DIR/2.6" "$DI_WWW_HOME/$subarch/cdrom/2.6/"
-	rm -f "$DI_DIR"/index* "$DI_DIR/2.6"/index*
+	rm -f "$DI_DIR"/index* "$DI_DIR/2.4"/index* "$DI_DIR/2.6"/index*
+	if [ -d "$DI_DIR/2.6" ]; then
+	    # Cope with old debian-installer image layout from before 2.6
+	    # became the default.
+	    mkdir -p "$DI_DIR/2.4"
+	    find "$DI_DIR" -type f -maxdepth 1 | xargs -r mv --target-directory="$DI_DIR/2.4"
+	    find "$DI_DIR/2.6" -type f -maxdepth 1 | xargs -r mv --target-directory="$DI_DIR"
+	    rm -rf "$DI_DIR/2.6"
+	fi
   fi
   cp -a "$DI_DIR" "$subarch"
   rm -rf di_stuff

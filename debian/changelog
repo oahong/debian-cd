@@ -1,7 +1,54 @@
-debian-cd (2.2.18) UNRELEASED; urgency=low
+debian-cd (2.2.20) UNRELEASED; urgency=low
 
-  * Remove debian-keyring.tar.gz from the doc dir.
-  * Don't include Contents-$ARCH.gz on netinst/businesscard CD.
+  * Joey Hess
+    - Remove bogus init=/linuxrc, we have not had a linuxrc in d-i for a long
+      time and I don't know how that managed to work.
+    - Update path to ia64 cdrom/boot.img.
+    - Tweaked exclude-udebs-i386, removing fat-modules as it's not available
+      otherwise if booting from floppy, and removing excludes of partconf,
+      partitioner, and discover2-data-udeb, which are not in unstable for i386
+      any longer.
+    - Updated exclude-udebs to match the current CD initrd package list.
+  * Stephen R. Marenka
+    - Add support for m68k reorganization.
+    - Bump m68k 2.4 kernels to 2.4.27.
+  * Petter Reinholdtsen
+    - New variable SPLASHPNG pointing to replacement splash image on i386.
+
+ -- Joey Hess <joeyh@debian.org>  Mon, 30 Aug 2004 15:23:19 -0400
+
+debian-cd (2.2.19) unstable; urgency=medium
+
+  * Steve McIntyre
+    - (Hopefully this time) Final medium-urgency upload to get a
+      recent debian-cd in before the sarge release. A few bugfixes needed:
+    - Removed silly build-dep-indep on mkisofs. Closes: #258018
+    - Fixed typo in tools/boot/sarge/boot-i386. Closes: #267026
+  * Santiago Garcia
+    - Change build.sh to allow building non complete CDs, like netinsts.
+
+ -- Steve McIntyre <93sam@debian.org>  Fri, 20 Aug 2004 14:59:11 +0100
+
+debian-cd (2.2.18) unstable; urgency=medium
+
+  * Steve McIntyre
+    - Final medium-urgency upload to get a recent debian-cd in before
+      the sarge release.
+    - Update default version to sarge/3.1 for a sarge release.
+    - Sarge is going to have more than 9 CDs; make sure we clean up all of
+      the working dirs.
+    - Removed the -T option to mkisofs. We don't need the TRANS.TBL files
+      any more, and we should save the space.
+    - Added support for SIZE_MULT_x when calculating full disc
+      sizes. Best use is on m68k and powerpc images where HFS hybrid
+      metadata seems to add ~10% to the size of the image.
+    - Various updates to update-cd to cope with changes r0->r2.
+    - Updated copy of CONF.sh in debian directory to match the working copy in .
+    - Small lintian fixes.
+  * Raphael Hertzog
+    - Add missing Build-Depends-Indep. Closes: #258018
+    - Remove debian-keyring.tar.gz from the doc dir.
+    - Don't include Contents-$ARCH.gz on netinst/businesscard CD.
   * Joey Hess
     - Include sarge installation manual on sarge CDs.
     - Remove install/doc, and just use doc/install.
@@ -35,33 +82,38 @@ debian-cd (2.2.18) UNRELEASED; urgency=low
     - Only exclude udebs from the CD that are in both the cd initrd and the
       hd-media initrd, since both use the CD. This adds back floppy-modules
       and firewire-core-modules.
+    - Add new default udeb_include files (for to full CDs and DVDs) that
+      include ethdetect and netcfg, to make network configuration happen in
+      first stage, since the second stage cannot currently do any.
+      Closes: #240458
+    - Include debian-installer+kernel into Debian_sarge task to ensure all
+      debs as well as udebs used by d-i are included.
+    - Exclude newer versions of i386 kernels to save space. Leave 2.6.x-386
+      kernels on the CD.
+    - Update task-essential-sarge to tasksel 2.05. Fix the generator to work
+      with post-2002 tasksels.
+    - Update task-full-sarge and task.list to tasksel 2.05. The task.list was
+      manually ordered to give desktop task priority, followed by servers,
+      followed by languages.
+    - NORECOMMENDS should be used for sarge official CD sets (getting full
+      tasks is more important), and is on by default.
+    - Add libfribidi0 to generate_di+k_list, needed for BIDI.
+    - Switch CONF.sh to sarge.
+    - Uncomment exclude lines.
+    - Remove the boot.bat script and redundant and incorrect README.tools.
+      The alternative is to maintain and document them.
+    - Exclude kernel sources from popcon results, old data skews this badly.
+    - Remove old kernel sources from interesting-fromcd23, and various other
+      removals and updates.
+    - Update the task lists and popcon again.
+    - Stop excluding 686 and 686-smp kernels, as these are probably the most
+      popular, and they fit on CD#1 now.
+    - Add "--" end of installer kernel params markers to the isolinux.cfg.
   * Petter Reinholdtsen
     - Regenereated tasks/popularity-contest-sarge based on the current data.
     - Avoid kernel versions 2.4.24 and 2.6.3 on the first i386 CD, as we
       are currently using 2.4.25.
-    - Remove packages not in testing from exclude-sarge:
-        kernel-image-2.2.20, kernel-image-2.2.20-compact,
-        kernel-image-2.2.20-idepci, kernel-image-2.2.20-reiserfs,
-        kernel-image-2.4.18-bf2.4, kernel-image-2.4.20-3-386,
-        kernel-image-2.4.20-3-586tsc, kernel-image-2.4.20-3-686,
-        kernel-image-2.4.20-3-686-smp, kernel-image-2.4.20-3-k6,
-        kernel-image-2.4.20-3-k7, kernel-image-2.4.20-3-k7-smp,
-        kernel-image-2.4.22-1-386, kernel-image-2.4.22-1-586tsc,
-        kernel-image-2.4.22-1-686, kernel-image-2.4.22-1-686-smp,
-        kernel-image-2.4.22-1-k6, kernel-image-2.4.22-1-k7,
-        kernel-image-2.4.22-1-k7-smp, kernel-image-2.4.22-speakup,
-        kernel-image-2.4.22-xfs-386, kernel-image-2.4.22-xfs-686-smp,
-        kernel-image-2.4.23-1-386, kernel-image-2.4.23-1-586tsc,
-        kernel-image-2.4.23-1-686, kernel-image-2.4.23-1-686-smp,
-        kernel-image-2.4.23-1-k6, kernel-image-2.4.23-1-k7,
-        kernel-image-2.4.23-1-k7-smp, kernel-image-2.6.0-1-386,
-        kernel-image-2.6.0-1-686, kernel-image-2.6.0-1-686-smp,
-        kernel-image-2.6.0-1-k7, kernel-image-2.6.0-1-k7-smp,
-        kernel-image-2.6.0-test11-1-386,
-        kernel-image-2.6.0-test9-1-386,
-        kernel-pcmcia-modules-2.4.22-xfs-386,
-        kernel-pcmcia-modules-2.4.22-xfs-686-smp,
-        kernel-source-2.2.20, timidity-patches, tcl8.2 and tk8.2.
+    - Remove packages not in testing from exclude-sarge.
     - Update list2cds to allow #-comments in the exclude file.
     - Try to create $(OUT) instead of just bailing out if it is missing.
     - Missing b-f documentation is not a fatal error.  Keep
@@ -72,14 +124,14 @@ debian-cd (2.2.18) UNRELEASED; urgency=low
       possible to use debian-installer with Woody CDs.
     - Avoid illegal dash (-) in cpp architecture defines.  Patch
       from Colin Watson.
-    - New variable SPLASHPNG pointing to replacement splash image on i386.
   * Stephen R. Marenka
     - Update m68k support for sarge.
         - Fix m68k/amiga icons.
         - Add 2.2 kernel-based cdrom initrd.
-        - Redo mz68k subarch boot/install for sarge.
+        - Redo m68k subarch boot/install for sarge.
         - Bump all subarchs to 2.4 kernel, except mac.
         - Add bvme6000 boot code.
+        - Workaround boot/install for non-DI_WWW_HOME case.
   * Santiago Garcia
     - Update isolinux.bin to the version we are shipping with Sarge.
     - Update debian-installer tasks.
@@ -98,6 +150,10 @@ debian-cd (2.2.18) UNRELEASED; urgency=low
     - Add 2.6 support to powerpc cds.
     - Add yaboot to powerpc netinst cds as debootstrap no longer adds it.
     - Update boot-sparc not to depend on a kernel version.
+    - Remove ramdisk_size param of silo.conf.
+    - Add initrd-tools to sparc di+k list.
+    - Generate PPC CD 1 with -chrp-boot. Closes: #252667
+    - Increase max catalog size on PPC DVDs. Closes: #252652
   * Bdale Garbee
     - shorten the command line in post-boot-hppa for sarge, as palo can't
       handle a command line longer than 127 chars right now
@@ -112,6 +168,22 @@ debian-cd (2.2.18) UNRELEASED; urgency=low
     - Add exclude-udebs-powerpc list with packages already in the initrd,
       along the same lines as exclude-udebs-i386. Saves about 11 megabytes.
     - Add bootable CD support for arm, following Vince Sanders' advice.
+    - Include kernel-image-2.4-* metapackages for ia64.
+    - Unexclude zlib1g-udeb, needed for ssh support in d-i.
+    - Make sure quik is on the powerpc netinst CD; debootstrap no longer
+      installs it.
+    - Bump initrd-size to 10MB for powerpc 2.4. Current d-i initrds exceed
+      that.
+    - Remove -safe options from powerpc yaboot menu, as they caused
+      combinatorial explosion. Instead, document video=ofonly in boot.msg.
+    - Clarify powerpc boot.msg a bit.
+    - Cope with debian-installer powerpc image rearrangement.
+  * Sven Luther
+    - fixed powerpc list so it includes the 2.6 kernels too as well as the
+      power3 and power4 2.4 kernels.
+  * Steve Langasek
+    - Add alpha and mipsel bootloaders to debian-installer+kernel,
+      so debootstrap doesn't have to install them
 
  -- Raphael Hertzog <hertzog@debian.org>  Thu, 25 Mar 2004 07:33:23 +0100
 
@@ -367,7 +439,7 @@ debian-cd (2.2.10) unstable; urgency=low
   * first test of multi-boot cdimage for i386 disk #1
     You must export MULTIBOOT="yes" in CONF.sh  to enable this feature. -jwest
   * Removed "ide" boot floppy's flavor. Closes: #120415
-  * Added support for s390 (Jochen Röhrig <jr@debian.org>).
+  * Added support for s390 (Jochen RÃ¶hrig <jr@debian.org>).
   * Documentation about the fact the environment variables may
     pollute your environment after a debian-cd run. Closes: #123289
 

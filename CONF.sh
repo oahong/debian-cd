@@ -48,8 +48,8 @@ unset SPLASHPNG         || true
 # Where I am (hoping I'm in the debian-cd dir)
 export BASEDIR=`pwd`
 
-# Building woody cd set ...
-export CODENAME=woody
+# Building sarge cd set ...
+export CODENAME=sarge
 
 # By default use Debian installer packages from $CODENAME
 if [ ! "$DI_CODENAME" ]
@@ -57,8 +57,14 @@ then
   export DI_CODENAME=$CODENAME
 fi
 
+# If set, controls where the d-i components are downloaded from.
+# This may be an url, or "default", which will make it use the default url
+# for the daily d-i builds. If not set, uses the official d-i images from
+# the Debian mirror.
+#export DI_WWW_HOME=default
+
 # Version number, "2.2 r0", "2.2 r1" etc.
-export DEBVERSION="3.0"
+export DEBVERSION="3.1"
 
 # Official or non-official set.
 # NOTE: THE "OFFICIAL" DESIGNATION IS ONLY ALLOWED FOR IMAGES AVAILABLE
@@ -158,9 +164,9 @@ export DEFBINSIZE=630
 export DEFSRCSIZE=635
 
 # We don't want certain packages to take up space on CD1...
-#export EXCLUDE="$BASEDIR"/tasks/exclude-potato
+export EXCLUDE="$BASEDIR"/tasks/exclude-sarge
 # ...but they are okay for other CDs (UNEXCLUDEx == may be included on CD >= x)
-#export UNEXCLUDE2="$BASEDIR"/tasks/unexclude-CD2-potato
+export UNEXCLUDE2="$BASEDIR"/tasks/unexclude-CD2-sarge
 # Any packages listed in EXCLUDE but not in any UNEXCLUDE will be
 # excluded completely.
 
@@ -169,7 +175,7 @@ export DEFSRCSIZE=635
 
 # Set this if the recommended packages should be skipped when adding 
 # package on the CD.  The default is 'false'.
-#export NORECOMMENDS=1
+export NORECOMMENDS=1
 
 # Set this if the suggested packages should be skipped when adding 
 # package on the CD.  The default is 'true'.
@@ -272,3 +278,8 @@ export PUBLISH_PATH="/home/jigdo-area/"
 
 # If set, overrides the boot picture used.
 #export SPLASHPNG="$BASEDIR/data/$CODENAME/splash-img.png"
+
+# Used by build.sh to determine what to build, this is the name of a target
+# in the Makefile. Use bin-official_images to build only binary CDs. The
+# default, official_images, builds everything.
+#IMAGETARGET=official_images
