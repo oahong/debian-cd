@@ -120,6 +120,14 @@ if [ -e boot$N/isolinux/f3.txt.with26 ];then
     fi
   done
   cp -a cdrom/2.6 $CDDIR/install/2.6
+
+if [ "$SPLASHPNG" ] ; then
+    # Insert our own splash screen.  Color index 15 is background, and
+    # index 7 is foreground.  Set to black and white respecively
+    pngtopnm < $SPLASHPNG | ppmquant 16 | \
+      ppmtolss16 "#ffffff=7" "#000000=15" > boot$N/isolinux/splash.rle
+fi
+
 # Isolinux config file.
 cat > boot$N/isolinux/isolinux.cfg <<EOF
 DEFAULT /install/vmlinuz APPEND $KERNEL_PARAMS vga=normal initrd=/install/initrd.gz ramdisk_size=10240 root=/dev/rd/0 init=/linuxrc devfs=mount,dall rw

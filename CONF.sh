@@ -42,6 +42,7 @@ unset BASE_EXCLUDE      || true
 unset INSTALLER_CD      || true
 unset DI_CODENAME       || true
 unset MAXCDS            || true
+unset SPLASHPNG         || true
 
 # The debian-cd dir
 # Where I am (hoping I'm in the debian-cd dir)
@@ -267,4 +268,7 @@ export PUBLISH_PATH="/home/jigdo-area/"
 #export KERNEL_PARAMS="DEBCONF_PRIORITY=critical"
 
 # If set, limits the number of binary CDs to produce.
-#MAXCDS=1
+#export MAXCDS=1
+
+# If set, overrides the boot picture used.
+#export SPLASHPNG="$BASEDIR/data/$CODENAME/splash-img.png"

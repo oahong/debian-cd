@@ -30,6 +30,8 @@ unset PUBLISH_NONUS_URL || true
 unset PUBLISH_PATH      || true
 unset INSTALLER_CD      || true
 unset DI_CODENAME       || true
+unset MAXCDS            || true
+unset SPLASHPNG         || true
 
 
 # The debian-cd dir
@@ -220,3 +222,13 @@ export PUBLISH_PATH="/home/jigdo-area/"
 # INSTALLER_CD=1: just add debian-installer (use TASK=tasks/debian-installer)
 # INSTALLER_CD=2: add d-i and base (use TASK=tasks/debian-installer+kernel)
 #export INSTALLER_CD=0
+
+# Parameters to pass to kernel when the CD boots. Not currently supported
+# for all architectures.
+#export KERNEL_PARAMS="DEBCONF_PRIORITY=critical"
+
+# If set, limits the number of binary CDs to produce.
+#export MAXCDS=1
+
+# If set, overrides the boot picture used.
+#export SPLASHPNG="$BASEDIR/data/$CODENAME/splash-img.png"

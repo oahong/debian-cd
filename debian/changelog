@@ -72,6 +72,7 @@ debian-cd (2.2.18) UNRELEASED; urgency=low
       possible to use debian-installer with Woody CDs.
     - Avoid illegal dash (-) in cpp architecture defines.  Patch
       from Colin Watson.
+    - New variable SPLASHPNG pointing to replacement splash image on i386.
   * Stephen R. Marenka
     - Update m68k support for sarge.
         - Fix m68k/amiga icons.
