@@ -41,7 +41,7 @@ unset BASE_INCLUDE      || true
 unset BASE_EXCLUDE      || true
 unset INSTALLER_CD      || true
 unset DI_CODENAME       || true
-unset MAXCDS		|| true
+unset MAXCDS            || true
 
 # The debian-cd dir
 # Where I am (hoping I'm in the debian-cd dir)
