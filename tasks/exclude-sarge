@@ -100,8 +100,8 @@ tk8.0
 xserver-xfree86-dbg
 zmailer
 
-# Packages implementing 'mail-transport-agent' required by 'at' that we
-# don't want on the first CD.
+# Packages implementing mail-transport-agent required by at that we
+# do not want on the first CD.
 courier-mta
 deliver
 esmtp
@@ -123,16 +123,16 @@ openoffice.org-l10n-el
 # We only need one lyx, lyx-qt
 lyx-xforms
 
-# Don't need apt-file
+# Do not need apt-file
 apt-file
 
-# Don't need elilo - it is mostly for ia64
+# Do not need elilo - it is mostly for ia64
 elilo
 
-# We don't use vserver
+# We do not use vserver
 vserver
 
-# We probably don't need rcs
+# We probably do not need rcs
 rcs
 
 This installer package is not needed
