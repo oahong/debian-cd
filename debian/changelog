@@ -27,6 +27,14 @@ debian-cd (2.2.18) UNRELEASED; urgency=low
       of hw-detect.
     - Add tools/get_diskusage.pl (originally by Petter).
     - Add update-popcon Makefile target (taken from Skolelinux).
+    - Add a KERNEL_PARAMS variable, which can be used to add kernel parameters
+      and is useful for creating things like CDs that install in critical
+      priority mode. I only implemented it for i386 so far.
+    - Add MAXCDS config variable, which forces debian-cd to stop after a given
+      number of binary CDs.
+    - Only exclude udebs from the CD that are in both the cd initrd and the
+      hd-media initrd, since both use the CD. This adds back floppy-modules
+      and firewire-core-modules.
   * Petter Reinholdtsen
     - Regenereated tasks/popularity-contest-sarge based on the current data.
     - Avoid kernel versions 2.4.24 and 2.6.3 on the first i386 CD, as we
@@ -98,6 +106,7 @@ debian-cd (2.2.18) UNRELEASED; urgency=low
   * Colin Watson
     - Add exclude-udebs-powerpc list with packages already in the initrd,
       along the same lines as exclude-udebs-i386. Saves about 11 megabytes.
+    - Add bootable CD support for arm, following Vince Sanders' advice.
 
  -- Raphael Hertzog <hertzog@debian.org>  Thu, 25 Mar 2004 07:33:23 +0100
 
