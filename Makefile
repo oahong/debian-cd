@@ -879,20 +879,13 @@ bin-images: ok bin-md5list $(OUT)
 			  -md5-list $(BDIR)/md5-check \
 			  $(JIGDO_OPTS) $$opts CD$$n; \
 		elif [ "$(DOJIGDO)" = "2" ]; then \
-			echo $(MKISOFS) $(MKISOFS_OPTS) -V "$$volid" \
-			  -o /dev/null -v \
-			  -jigdo-jigdo $(OUT)/$(CODENAME)-$(ARCH)-$$n.jigdo \
-			  -jigdo-template $(OUT)/$(CODENAME)-$(ARCH)-$$n.template \
-			  -jigdo-map Debian=CD$$n/ \
-			  -jigdo-exclude boot$$n \
-			  -md5-list $(BDIR)/md5-check \
-			  $(JIGDO_OPTS) $$opts CD$$n; \
 			$(MKISOFS) $(MKISOFS_OPTS) -V "$$volid" \
 			  -o /dev/null -v \
 			  -jigdo-jigdo $(OUT)/$(CODENAME)-$(ARCH)-$$n.jigdo \
 			  -jigdo-template $(OUT)/$(CODENAME)-$(ARCH)-$$n.template \
 			  -jigdo-map Debian=CD$$n/ \
 			  -jigdo-exclude boot$$n \
+			  -md5-list $(BDIR)/md5-check \
 			  $(JIGDO_OPTS) $$opts CD$$n; \
 		fi; \
 		if [ "$(DOJIGDO)" != "0" ]; then \
@@ -925,7 +918,7 @@ src-images: ok src-md5list $(OUT)
 			  -jigdo-jigdo $(OUT)/$(CODENAME)-src-$$n.jigdo \
 			  -jigdo-template $(OUT)/$(CODENAME)-src-$$n.template \
 			  -jigdo-map Debian=CD$$n/ \
-			  -md5-list $(BDIR)/md5-check \
+			  -md5-list $(SDIR)/md5-check \
 			  $(JIGDO_OPTS) $$opts CD$$n ; \
 		elif [ "$(DOJIGDO)" = "2" ]; then \
 			$(MKISOFS) $(MKISOFS_OPTS) -V "$$volid" \
@@ -933,7 +926,7 @@ src-images: ok src-md5list $(OUT)
 			  -jigdo-jigdo $(OUT)/$(CODENAME)-src-$$n.jigdo \
 			  -jigdo-template $(OUT)/$(CODENAME)-src-$$n.template \
 			  -jigdo-map Debian=CD$$n/ \
-			  -md5-list $(BDIR)/md5-check \
+			  -md5-list $(SDIR)/md5-check \
 			  $(JIGDO_OPTS) $$opts CD$$n ; \
 		fi; \
 		if [ "$(DOJIGDO)" != "0" ]; then \
@@ -998,14 +991,14 @@ conf:
 	sensible-editor $(BASEDIR)/CONF.sh
 
 mirrorcheck-binary: ok
-	rm -f $(BDIR)/md5-check.binary
+	rm -f $(BDIR)/md5-check
 	$(Q)$(grab_md5) $(MIRROR) $(ARCH) $(CODENAME) $(BDIR)/md5-check
 	if [ -n "$(NONUS)" ]; then \
 		$(grab_md5) $(NONUS) $(ARCH) $(CODENAME) $(BDIR)/md5-check; \
 	fi
 
 mirrorcheck-source: ok
-	rm -f $(SDIR)/md5-check.source
+	rm -f $(SDIR)/md5-check
 	$(Q)$(grab_md5) $(MIRROR) source $(CODENAME) $(SDIR)/md5-check
 	if [ -n "$(NONUS)" ]; then \
 		$(grab_md5) $(NONUS) source $(CODENAME) $(SDIR)/md5-check; \
