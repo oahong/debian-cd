@@ -24,11 +24,11 @@ unset SRCEXCLUDE        || true
 unset NORECOMMENDS      || true
 unset NOSUGGESTS        || true
 unset DOJIGDO           || true
-unset JIGDOCMD          || true
 unset JIGDOTEMPLATEURL  || true
 unset JIGDOFALLBACKURLS || true
 unset JIGDOINCLUDEURLS  || true
 unset JIGDOSCRIPT       || true
+unset JIGDO_OPTS        || true
 unset DEFBINSIZE        || true
 unset DEFSRCSIZE        || true
 unset FASTSUMS          || true
@@ -178,17 +178,9 @@ export DEFSRCSIZE=635
 # Produce jigdo files:
 # 0/unset = Don't do jigdo at all, produce only the full iso image.
 # 1 = Produce both the iso image and jigdo stuff.
-# 2 = Produce ONLY jigdo stuff by piping mkisofs directly into jigdo-file,
-#     no temporary iso image is created (saves lots of disk space).
-#     NOTE: The no-temp-iso will not work for (at least) alpha and powerpc
-#     since they need the actual .iso to make it bootable. For these archs,
-#     the temp-iso will be generated, but deleted again immediately after the
-#     jigdo stuff is made; needs temporary space as big as the biggest image.
+# 2 = Produce ONLY jigdo stuff; no iso image is created (saves lots
+#     of disk space).
 #export DOJIGDO=2
-#
-# jigdo-file command & options
-# Note: building the cache takes hours, so keep it around for the next run
-#export JIGDOCMD="/usr/local/bin/jigdo-file --cache=$HOME/jigdo-cache.db"
 #
 # HTTP/FTP URL for directory where you intend to make the templates
 # available. You should not need to change this; the default value ""
@@ -234,6 +226,21 @@ export JIGDOINCLUDEURLS="http://cdimage.debian.org/debian-cd/debian-servers.jigd
 export PUBLISH_URL="http://cdimage.debian.org/jigdo-area"
 export PUBLISH_NONUS_URL="http://non-US.cdimage.debian.org/jigdo-area"
 export PUBLISH_PATH="/home/jigdo-area/"
+
+# Specify files and directories to *exclude* from jigdo processing. These
+# files on each CD are expected to be different to those on the mirror, or
+# are often subject to change. Any files matching entries in this list will
+# simply be placed straight into the template file.
+export JIGDO_EXCLUDE="'README*' doc install md5sum.txt .disk non-US pics 'Release*' 'Packages*' 'Sources*'"
+
+# Specify the minimum file size to consider for jigdo processing. Any files
+# smaller than this will simply be placed straight into the template file.
+export JIGDO_OPTS="-jigdo-min-file-size 0"
+
+for EXCL in $JIGDO_EXCLUDE
+do
+    JIGDO_OPTS="$JIGDO_OPTS -jigdo-exclude $EXCL"
+done
 
 # Where to find the boot disks
 #export BOOTDISKS=$TOPDIR/ftp/skolelinux/boot-floppies
