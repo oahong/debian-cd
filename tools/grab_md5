@@ -1,0 +1,62 @@
+#!/bin/sh
+#
+# grab_md5
+# (c) 2004 Steve McIntyre <steve@einval.com>
+#
+# GPL v2
+#
+# Parse Packages and Sources files out of a mirror and pre-process
+# them into a single list ready for mkisofs to check later
+
+MIRROR=$1
+ARCH=$2
+SUITE=$3
+OUT=$4
+
+case $ARCH in
+    source)
+        FILES=`find $MIRROR/dists/$SUITE/ -name Sources.gz`
+        echo -e "Using MD5 sums from Sources files:\n$FILES"
+        zcat -f $FILES | awk '
+            /^Directory:/ 	{
+                                DIR = $2
+                                next
+                            }
+            /^Files:/       {
+                                in_files = 1
+                                next
+                            }
+            /^ /            {
+                                if (in_files) { 
+                                    gsub("^ ", "", $0)
+                                    MD5 = $1
+                                    FILE = $3
+                                    printf("%s  %s%s\n", MD5, DIR, FILE);
+                                }
+                            }
+            /.*/            {
+                                if (!length($0)) {
+                                    in_files = 0
+                                    next
+                                }
+                            }' | sort | uniq >> $OUT
+        ;;
+    alpha|arm|hppa|i386|ia64|m68k|mips|mipsel|powerpc|s390|sparc)
+        FILES=`find $MIRROR/dists/$SUITE/ -name Packages -o -name Packages.gz | grep binary-$ARCH`
+        echo -e "Using MD5 sums from Packages files:\n$FILES"
+        zcat -f $FILES | awk '
+            /^Filename:/    {
+                                FILE = $2
+                            }
+            /^MD5sum:/      {
+                                MD5 = $2
+                                printf("%s  %s\n", MD5, FILE)
+                            }' | sort | uniq >> $OUT
+        ;;
+    *)
+        echo "Unknown arch/source $ARCH!"
+        exit 1
+        ;;
+esac
+
+exit 0

@@ -15,7 +15,10 @@ do
 	make ${CODENAME}_status
 	echo " ... checking your mirror"
 	if [ "$SKIPMIRRORCHECK" != "yes" ] ; then 
-		make mirrorcheck
+		make mirrorcheck-binary
+      	if [ "$ARCH" = "i386" ]; then
+            make mirrorcheck-source
+        fi
 	else
 		echo "WARNING: skipping mirrorcheck"
 	fi

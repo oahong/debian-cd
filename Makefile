@@ -100,6 +100,7 @@ add_secured=$(BASEDIR)/tools/add_secured
 md5sum=/usr/bin/md5sum.textutils
 fastsums=$(BASEDIR)/tools/fast_sums
 jigdo_cleanup=$(BASEDIR)/tools/jigdo_cleanup
+grab_md5=$(BASEDIR)/tools/grab_md5
 
 BDIR=$(TDIR)/$(CODENAME)-$(ARCH)
 ADIR=$(APTTMP)/$(CODENAME)-$(ARCH)
@@ -198,15 +199,17 @@ unstable-map:
 # CLeans the current arch tree (but not packages selection info)
 clean: ok bin-clean src-clean
 bin-clean:
-	$(Q)rm -rf $(BDIR)/CD[1234567890]
+	$(Q)rm -rf $(BDIR)/CD[1234567890]*
 	$(Q)rm -rf $(BDIR)/*_NONUS
 	$(Q)rm -f $(BDIR)/*.filelist*
 	$(Q)rm -f  $(BDIR)/packages-stamp $(BDIR)/bootable-stamp \
-	         $(BDIR)/upgrade-stamp $(BDIR)/secured-stamp
+	         $(BDIR)/upgrade-stamp $(BDIR)/secured-stamp \
+			 $(BDIR)/md5-check
 src-clean:
-	$(Q)rm -rf $(SDIR)/CD[1234567890]
+	$(Q)rm -rf $(SDIR)/CD[1234567890]*
 	$(Q)rm -rf $(SDIR)/*_NONUS
-	$(Q)rm -rf $(SDIR)/sources-stamp $(SDIR)/secured-stamp
+	$(Q)rm -rf $(SDIR)/sources-stamp $(SDIR)/secured-stamp  \
+			 $(SDIR)/md5-check
 
 # Completely cleans the current arch tree
 realclean: distclean
@@ -873,6 +876,7 @@ bin-images: ok bin-md5list $(OUT)
 			  -jigdo-template $(OUT)/$(CODENAME)-$(ARCH)-$$n.template \
 			  -jigdo-map Debian=CD$$n/ \
 			  -jigdo-exclude boot$$n \
+			  -md5-list $(BDIR)/md5-check \
 			  $(JIGDO_OPTS) $$opts CD$$n; \
 		elif [ "$(DOJIGDO)" = "2" ]; then \
 			echo $(MKISOFS) $(MKISOFS_OPTS) -V "$$volid" \
@@ -881,6 +885,7 @@ bin-images: ok bin-md5list $(OUT)
 			  -jigdo-template $(OUT)/$(CODENAME)-$(ARCH)-$$n.template \
 			  -jigdo-map Debian=CD$$n/ \
 			  -jigdo-exclude boot$$n \
+			  -md5-list $(BDIR)/md5-check \
 			  $(JIGDO_OPTS) $$opts CD$$n; \
 			$(MKISOFS) $(MKISOFS_OPTS) -V "$$volid" \
 			  -o /dev/null -v \
@@ -920,7 +925,7 @@ src-images: ok src-md5list $(OUT)
 			  -jigdo-jigdo $(OUT)/$(CODENAME)-src-$$n.jigdo \
 			  -jigdo-template $(OUT)/$(CODENAME)-src-$$n.template \
 			  -jigdo-map Debian=CD$$n/ \
-			  -jigdo-exclude boot$$n \
+			  -md5-list $(BDIR)/md5-check \
 			  $(JIGDO_OPTS) $$opts CD$$n ; \
 		elif [ "$(DOJIGDO)" = "2" ]; then \
 			$(MKISOFS) $(MKISOFS_OPTS) -V "$$volid" \
@@ -928,7 +933,7 @@ src-images: ok src-md5list $(OUT)
 			  -jigdo-jigdo $(OUT)/$(CODENAME)-src-$$n.jigdo \
 			  -jigdo-template $(OUT)/$(CODENAME)-src-$$n.template \
 			  -jigdo-map Debian=CD$$n/ \
-			  -jigdo-exclude boot$$n \
+			  -md5-list $(BDIR)/md5-check \
 			  $(JIGDO_OPTS) $$opts CD$$n ; \
 		fi; \
 		if [ "$(DOJIGDO)" != "0" ]; then \
@@ -992,8 +997,19 @@ readme:
 conf:
 	sensible-editor $(BASEDIR)/CONF.sh
 
-mirrorcheck: ok apt-update
-	$(Q)$(apt) cache dumpavail | $(mirrorcheck)
+mirrorcheck-binary: ok
+	rm -f $(BDIR)/md5-check.binary
+	$(Q)$(grab_md5) $(MIRROR) $(ARCH) $(CODENAME) $(BDIR)/md5-check
+	if [ -n "$(NONUS)" ]; then \
+		$(grab_md5) $(NONUS) $(ARCH) $(CODENAME) $(BDIR)/md5-check; \
+	fi
+
+mirrorcheck-source: ok
+	rm -f $(SDIR)/md5-check.source
+	$(Q)$(grab_md5) $(MIRROR) source $(CODENAME) $(SDIR)/md5-check
+	if [ -n "$(NONUS)" ]; then \
+		$(grab_md5) $(NONUS) source $(CODENAME) $(SDIR)/md5-check; \
+	fi
 
 update-popcon: tasks/popularity-contest-$(CODENAME)
 tasks/popularity-contest-$(CODENAME):
