@@ -41,7 +41,7 @@ unset BASE_INCLUDE      || true
 unset BASE_EXCLUDE      || true
 unset INSTALLER_CD      || true
 unset DI_CODENAME       || true
-
+unset MAXCDS		|| true
 
 # The debian-cd dir
 # Where I am (hoping I'm in the debian-cd dir)
@@ -265,3 +265,6 @@ export PUBLISH_PATH="/home/jigdo-area/"
 # Parameters to pass to kernel when the CD boots. Not currently supported
 # for all architectures.
 #export KERNEL_PARAMS="DEBCONF_PRIORITY=critical"
+
+# If set, limits the number of binary CDs to produce.
+#MAXCDS=1
