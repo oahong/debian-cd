@@ -11,12 +11,6 @@ if [ -n "$1" ] ; then
     export ARCH=$1
 fi
 
-cd tools 
-generate_di_list
-generate_di+k_list
-cd ..
-make update-popcon
-
 make distclean
 make ${CODENAME}_status
 if [ "$SKIPMIRRORCHECK" = "yes" ]; then
@@ -57,5 +51,3 @@ fi
 make "$IMAGETARGET"
 
 make imagesums
-
-tools/get_diskusage.pl
