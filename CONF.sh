@@ -261,3 +261,7 @@ export PUBLISH_PATH="/home/jigdo-area/"
 # INSTALLER_CD=1: just add debian-installer (use TASK=tasks/debian-installer)
 # INSTALLER_CD=2: add d-i and base (use TASK=tasks/debian-installer+kernel)
 #export INSTALLER_CD=0
+
+# Parameters to pass to kernel when the CD boots. Not currently supported
+# for all architectures.
+#export KERNEL_PARAMS="DEBCONF_PRIORITY=critical"
