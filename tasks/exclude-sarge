@@ -104,7 +104,8 @@ zmailer
  do not want on the first CD. */
 courier-mta
 deliver
-esmtp
+/* esmtp -- I'd like to exclude this, but currently it causes at to be
+ * excluded. */
 exim
 exim4-daemon-heavy
 maildrop
