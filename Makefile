@@ -66,9 +66,6 @@ endif
 ifndef DOJIGDO
 export DOJIGDO=0
 endif
-ifndef JIGDOSCRIPT
-JIGDOSCRIPT=$(BASEDIR)/tools/jigdo_header
-endif
 
 ifndef UDEB_INCLUDE
 # Netinst/businesscard CD have different udeb_include files
@@ -102,6 +99,7 @@ strip_nonus_bin=$(BASEDIR)/tools/strip-nonUS-bin
 add_secured=$(BASEDIR)/tools/add_secured
 md5sum=/usr/bin/md5sum.textutils
 fastsums=$(BASEDIR)/tools/fast_sums
+jigdo_cleanup=$(BASEDIR)/tools/jigdo_cleanup
 
 BDIR=$(TDIR)/$(CODENAME)-$(ARCH)
 ADIR=$(APTTMP)/$(CODENAME)-$(ARCH)
@@ -224,11 +222,9 @@ bin-distclean:
 	$(Q)echo "Cleaning the binary build directory"
 	$(Q)rm -rf $(BDIR)
 	$(Q)rm -rf $(ADIR)
-	$(Q)rm -rf $(TDIR)/jigdofilelist
 src-distclean:
 	$(Q)echo "Cleaning the source build directory"
 	$(Q)rm -rf $(SDIR)
-	$(Q)rm -rf $(TDIR)/jigdofilelist
 
 ## STATUS and APT ##
 
@@ -854,43 +850,16 @@ $(SDIR)/secured-stamp:
 	done
 	$(Q)touch $(SDIR)/secured-stamp
 
-# Make file list for jigdo (if DOJIGDO>0)
-# "Fake" depend on the unstable Packages.gz to make sure we only regenerate
-# this list when really necessary (saves many minutes per run).
-# Don't depend on anything else as this will not work as intended, so
-# make $(TDIR) ourselves just to be sure.
-$(TDIR)/jigdofilelist: $(MIRROR)/dists/$(CODENAME)/main/binary-$(ARCH)/Packages.gz
-	@echo "Generating file list for jigdo (if requested) ..."
-	$(Q)set -e; \
-	if [ "$(DOJIGDO)" != 0 ]; then \
-		mkdir -p $(TDIR); \
-		find $(MIRROR)//dists/$(CODENAME)/main/disks-$(ARCH) \
-		     $(MIRROR)//dists/$(CODENAME) \
-		     $(MIRROR)//doc $(MIRROR)//indices \
-		     $(MIRROR)//pool $(MIRROR)//project $(MIRROR)//tools \
-		     -type f \
-		| egrep -v '/Contents|/README|INDEX$$|/Maintainers|/Release$$|/debian-keyring\.tar\.gz$$|/ls-lR|//doc/[^/]+/?[^/]*\.(txt|html)$$' \
-		> $(TDIR)/jigdofilelist; \
-		if [ -n "$(NONUS)" ]; then \
-			find $(NONUS)//dists/$(CODENAME) $(NONUS)// -type f \
-			| egrep -v '/Contents|/README|INDEX$$|/Maintainers|/Release$$|/debian-keyring\.tar\.gz$$|/ls-lR|//doc/[^/]+/?[^/]*\.(txt|html)$$' \
-			>> $(TDIR)/jigdofilelist; \
-		fi; \
-	fi
-
 # Generates all the images
 images: bin-images src-images
 
-# DOJIGDO postboot actions   (source has the appropriate subset)
-#    0      no     isofile
-#    0      yes    isofile  post
-#    1      no     isofile        jigdo            jigdoadd
-#    1      yes    isofile  post  jigdo            jigdoadd
-#    2      no                           isojigdo  jigdoadd
-#    2      yes    isofile  post  jigdo            jigdoadd  rmiso 
+# DOJIGDO actions   (for both binaries and source)
+#    0    isofile
+#    1    isofile + jigdo, cleanup_jigdo
+#    2    jigdo, cleanup_jigdo
 #
-bin-images: ok bin-md5list $(OUT) $(TDIR)/jigdofilelist
-	@echo "Generating the binary iso images ..."
+bin-images: ok bin-md5list $(OUT)
+	@echo "Generating the binary iso/jigdo images ..."
 	$(Q)set -e; \
 	 for file in $(BDIR)/*.packages; do \
 		dir=$${file%%.packages}; \
@@ -901,43 +870,46 @@ bin-images: ok bin-md5list $(OUT) $(TDIR)/jigdofilelist
 		opts=`cat $(BDIR)/$$n.mkisofs_opts`; \
 		volid=`cat $(BDIR)/$$n.volid`; \
 		rm -f $(OUT)/$(CODENAME)-$(ARCH)-$$n.raw; \
+		if [ "$(DOJIGDO)" = "0" ]; then \
+			$(MKISOFS) $(MKISOFS_OPTS) -V "$$volid" \
+			  -o $(OUT)/$(CODENAME)-$(ARCH)-$$n.raw $$opts CD$$n; \
+		elif [ "$(DOJIGDO)" = "1" ]; then \
+			$(MKISOFS) $(MKISOFS_OPTS) -V "$$volid" \
+			  -o $(OUT)/$(CODENAME)-$(ARCH)-$$n.raw \
+			  -jigdo-jigdo $(OUT)/$(CODENAME)-$(ARCH)-$$n.jigdo \
+			  -jigdo-template $(OUT)/$(CODENAME)-$(ARCH)-$$n.template \
+			  -jigdo-map Debian=CD$$n/ \
+			  -jigdo-exclude boot$$n \
+			  $(JIGDO_OPTS) $$opts CD$$n; \
+		elif [ "$(DOJIGDO)" = "2" ]; then \
+			echo $(MKISOFS) $(MKISOFS_OPTS) -V "$$volid" \
+			  -o /dev/null -v \
+			  -jigdo-jigdo $(OUT)/$(CODENAME)-$(ARCH)-$$n.jigdo \
+			  -jigdo-template $(OUT)/$(CODENAME)-$(ARCH)-$$n.template \
+			  -jigdo-map Debian=CD$$n/ \
+			  -jigdo-exclude boot$$n \
+			  $(JIGDO_OPTS) $$opts CD$$n; \
+			$(MKISOFS) $(MKISOFS_OPTS) -V "$$volid" \
+			  -o /dev/null -v \
+			  -jigdo-jigdo $(OUT)/$(CODENAME)-$(ARCH)-$$n.jigdo \
+			  -jigdo-template $(OUT)/$(CODENAME)-$(ARCH)-$$n.template \
+			  -jigdo-map Debian=CD$$n/ \
+			  -jigdo-exclude boot$$n \
+			  $(JIGDO_OPTS) $$opts CD$$n; \
+		fi; \
 		if [ "$(DOJIGDO)" != "0" ]; then \
-			$(JIGDOSCRIPT) \
-				"debian-`echo $(DEBVERSION) | sed -e 's/[. ]//g'`-$(ARCH)-binary-$$n.iso" \
-				"`echo "$(JIGDOTEMPLATEURL)" | sed -e 's|%ARCH%|$(ARCH)|g'`$(CODENAME)-$(ARCH)-$$n.template" \
+			$(jigdo_cleanup) $(OUT)/$(CODENAME)-$(ARCH)-$$n.jigdo \
+				debian-`echo $(DEBVERSION) | sed -e 's/[. ]//g'`-$(ARCH)-binary-$$n.iso \
+				`echo "$(JIGDOTEMPLATEURL)" | sed -e 's|%ARCH%|$(ARCH)|g'`"$(CODENAME)-$(ARCH)-$$n.template" \
 				$(BINDISKINFOND) \
-				> $(TDIR)/$(CODENAME)-$(ARCH).jigdo; \
-		fi; \
-		if [ "$(DOJIGDO)" != "2" -o -f $(BASEDIR)/tools/boot/$(DI_CODENAME)/post-boot-$(ARCH) ]; then \
-			$(MKISOFS) $(MKISOFS_OPTS) -V "$$volid" \
-			  -o $(OUT)/$(CODENAME)-$(ARCH)-$$n.raw $$opts CD$$n ; \
-			if [ -f $(BASEDIR)/tools/boot/$(DI_CODENAME)/post-boot-$(ARCH) ]; then \
-				$(BASEDIR)/tools/boot/$(DI_CODENAME)/post-boot-$(ARCH) $$n $$dir \
-				 $(OUT)/$(CODENAME)-$(ARCH)-$$n.raw; \
-			fi; \
-			if [ "$(DOJIGDO)" != "0" ]; then \
-				$(BASEDIR)/tools/jigdo_create "$(OUT)/$(CODENAME)-$(ARCH)-$$n.raw" \
-				  "$(OUT)/$(CODENAME)-$(ARCH)-$$n.jigdo" \
-				  "$(OUT)/$(CODENAME)-$(ARCH)-$$n.template" \
-				  "$(TDIR)/$(CODENAME)-$(ARCH).jigdo"; \
-			fi; \
-		else \
-			$(MKISOFS) $(MKISOFS_OPTS) -V "$$volid" \
-			  $$opts CD$$n \
-			| $(BASEDIR)/tools/jigdo_create "-" \
-				  "$(OUT)/$(CODENAME)-$(ARCH)-$$n.jigdo" \
-				  "$(OUT)/$(CODENAME)-$(ARCH)-$$n.template" \
-				  "$(TDIR)/$(CODENAME)-$(ARCH).jigdo"; \
-		fi; \
-		if [ "$(DOJIGDO)" = "2" ]; then \
-			rm -f $(OUT)/$(CODENAME)-$(ARCH)-$$n.raw; \
+				$(JIGDOFALLBACKURLS) ; \
 		fi; \
 	done
-	rm -f "$(TDIR)/$(CODENAME)-$(ARCH).jigdo"
-src-images: ok src-md5list $(OUT) $(TDIR)/jigdofilelist
-	@echo "Generating the source iso images ..."
-	$(Q)set -e; \
-	 for file in $(SDIR)/*.sources; do \
+
+src-images: ok src-md5list $(OUT)
+	@echo "Generating the source iso/jigdo images ..."
+	$(Q)set -e; set -x; \
+	for file in $(SDIR)/*.sources; do \
 		dir=$${file%%.sources}; \
 		n=$${dir##$(SDIR)/}; \
 		num=$$n; \
@@ -946,39 +918,33 @@ src-images: ok src-md5list $(OUT) $(TDIR)/jigdofilelist
 		opts=`cat $(SDIR)/$$n.mkisofs_opts`; \
 		volid=`cat $(SDIR)/$$n.volid`; \
 		rm -f $(OUT)/$(CODENAME)-src-$$n.raw; \
-		if [ "$(DOJIGDO)" != "0" ]; then \
-			$(JIGDOSCRIPT) \
-				"debian-`echo $(DEBVERSION) | sed -e 's/[. ]//g'`-source-$$n.iso" \
-				"`echo "$(JIGDOTEMPLATEURL)" | sed -e 's|%ARCH%|$(ARCH)|g'`$(CODENAME)-src-$$n.template" \
-				$(SRCDISKINFOND) \
-				> $(TDIR)/$(CODENAME)-src.jigdo; \
-		fi; \
-		if [ "$(DOJIGDO)" != "2" ]; then \
+		if [ "$(DOJIGDO)" = "0" ]; then \
 			$(MKISOFS) $(MKISOFS_OPTS) -V "$$volid" \
 			  -o $(OUT)/$(CODENAME)-src-$$n.raw $$opts CD$$n ; \
-			if [ "$(DOJIGDO)" != "0" ]; then \
-				$(BASEDIR)/tools/jigdo_create "$(OUT)/$(CODENAME)-src-$$n.raw" \
-				  "$(OUT)/$(CODENAME)-src-$$n.jigdo" \
-				  "$(OUT)/$(CODENAME)-src-$$n.template" \
-				  "$(TDIR)/$(CODENAME)-src.jigdo"; \
-			fi; \
-		else \
+		elif [ "$(DOJIGDO)" = "1" ]; then \
 			$(MKISOFS) $(MKISOFS_OPTS) -V "$$volid" \
-			  $$opts CD$$n \
-			| $(BASEDIR)/tools/jigdo_create "-" \
-				  "$(OUT)/$(CODENAME)-src-$$n.jigdo" \
-				  "$(OUT)/$(CODENAME)-src-$$n.template" \
-				  "$(TDIR)/$(CODENAME)-src.jigdo"; \
+			  -o $(OUT)/$(CODENAME)-src-$$n.raw \
+			  -jigdo-jigdo $(OUT)/$(CODENAME)-src-$$n.jigdo \
+			  -jigdo-template $(OUT)/$(CODENAME)-src-$$n.template \
+			  -jigdo-map Debian=CD$$n/ \
+			  -jigdo-exclude boot$$n \
+			  $(JIGDO_OPTS) $$opts CD$$n ; \
+		elif [ "$(DOJIGDO)" = "2" ]; then \
+			$(MKISOFS) $(MKISOFS_OPTS) -V "$$volid" \
+			  -o /dev/null \
+			  -jigdo-jigdo $(OUT)/$(CODENAME)-src-$$n.jigdo \
+			  -jigdo-template $(OUT)/$(CODENAME)-src-$$n.template \
+			  -jigdo-map Debian=CD$$n/ \
+			  -jigdo-exclude boot$$n \
+			  $(JIGDO_OPTS) $$opts CD$$n ; \
 		fi; \
-	done
-	rm -f "$(TDIR)/$(CODENAME)-src.jigdo"
-
-# Generate the *.list files for the Pseudo Image Kit
-pi-makelist:
-	$(Q)set -e; \
-	 cd $(OUT); for file in `find * -name \*.raw`; do \
-		$(BASEDIR)/tools/pi-makelist \
-			$$file > $${file%%.raw}.list; \
+		if [ "$(DOJIGDO)" != "0" ]; then \
+			$(jigdo_cleanup) $(OUT)/$(CODENAME)-src-$$n.jigdo \
+				debian-`echo $(DEBVERSION) | sed -e 's/[. ]//g'`-source-$$n.iso \
+				`echo "$(JIGDOTEMPLATEURL)" | sed -e 's|%ARCH%|source|g'`"$(CODENAME)-src-$$n.template" \
+				$(SRCDISKINFOND) \
+				$(JIGDOFALLBACKURLS) ; \
+		fi; \
 	done
 
 # Generate only one image number $(CD)
