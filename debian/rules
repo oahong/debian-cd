@@ -1,145 +1,84 @@
 #!/usr/bin/make -f
-##############################################################################
-# Generic debian/rules file. Based on:
-#
-#> Sample debian.rules file - for GNU Hello (1.3).
-#> Copyright 1994,1995 by Ian Jackson.
-#> I hereby give you perpetual unlimited permission to copy,
-#> modify and relicense this file, provided that you do not remove
-#> my name from the file itself.  (I assert my moral right of
-#> paternity under the Copyright, Designs and Patents Act 1988.)
-#
-# Heavily modified by Joey Hess <jeh22@cornell.edu>
-#
-##############################################################################
-#
-# NOTE: You shouldn't have to edit this file. Edit debian/config instead.
-# If you must edit this file to get your package to build properly, then
-# I have failed. Let me know; mail jeh22@cornell.edu.
-#
-# (Currently not handled: multiple binary packages from 1 source package,
-# and binary-indep rule.)
-#
-# NOTE: This file is designed so it doesn't need to be run as root. For
-# actions that require that the user be root, the root password will be
-# prompted for, if you're not already root.
-#
-##############################################################################
+#-*- makefile -*-
+# Made with the aid of dh_make, by Craig Small
+# Sample debian/rules that uses debhelper. GNU copyright 1997 by Joey Hess.
+# Some lines taken from debmake, by Christoph Lameter.
 
-# Include config file.
-include debian/config
+# Uncomment this to turn on verbose mode.
+#export DH_VERBOSE=1
+export DH_COMPAT=2
 
-# Generate a makefile (via configure scriopt or xmkmf).
-makefile-stamp:
-  ifeq ($(strip $(use_imakefile)),y)
-	xmkmf -a
-  endif 
-	$(use_configure)
-	touch makefile-stamp
+build: build-stamp
+build-stamp:
+	dh_testdir
 
-# Preserve some files that may get deleted/overwritten/modified otherwise.
-preserve-stamp:
-  ifneq ($(strip $(preserve_files)),)
-	$(foreach file,$(preserve_files),-cp $(file) $(file).preserved)
-  endif
-	touch preserve-stamp
+	#CONFIGURE#
+	# Add here commands to compile the package.
+	#$(MAKE) 
 
-build: preserve-stamp makefile-stamp
-	$(checkdir)
-	$(build_command)
-	touch build
+	touch build-stamp
 
-clean: preserve-stamp makefile-stamp
-	$(checkdir)
-  # Do actual cleaning up here.
-	-rm -f build
-	$(clean_command)
-	-rm -rf *~ debian/*~ debian/files* $(clean_files)
-	$(clean_tmp)
-  # Remove Makefile that xmkmf creates.
-  ifeq ($(strip $(use_imakefile)),y)
-	-rm -f Makefile
-  endif
-  # If we preserved some files, we need to restore them now.
-  ifneq ($(strip $(preserve_files)),)
-	$(foreach file,$(preserve_files),-mv -f $(file).preserved $(file))
-  endif
-	-rm -f preserve-stamp makefile-stamp
+clean:
+	dh_testdir
+	dh_testroot
+	rm -f build-stamp install-stamp
 
-# Build architecture-independent files here.
-# (not yet set up to be used)
-binary-indep: build
-	$(checkdir)
+	# Add here commands to clean up after the build process.
+	#-#CLEAN#
+
+	dh_clean
+
+install: install-stamp
+install-stamp: build-stamp
+	dh_testdir
+	dh_testroot
+	dh_clean -k
+	dh_installdirs
+
+	# Add here commands to install the package into debian/tmp.
+	cp -r tools tasks data Makefile README README.devel build.sh \
+              build_all.sh debian/debian-cd/usr/share/debian-cd/
+	cp debian/CONF.sh debian/debian-cd/etc/debian-cd/conf.sh
+	ln -sf /etc/debian-cd/conf.sh \
+               debian/debian-cd/usr/share/debian-cd/CONF.sh
+	
+
+	touch install-stamp
 
 # Build architecture-dependent files here.
-binary-arch: build
-	echo $(checkdir)
-	$(checkdir)
-	echo $(clean_tmp)
-	$(clean_tmp)
-	install -d debian/tmp debian/tmp/DEBIAN debian/tmp/usr/doc/$(package)
-	$(install_command)
-  # Compress manpages
-	-gzip -9v -r debian/tmp/usr/man/ debian/tmp/usr/X11R6/man/
-  # Install documentation files, compressed.
-  ifneq ($(strip $(docs)),)
-	cp $(docs) debian/tmp/usr/doc/$(package)
-	gzip -9v debian/tmp/usr/doc/$(package)/*
-  endif
-  # Install copyright file, don't compress.
-  ifneq ($(strip $(copyright)),)
-	cp $(copyright) debian/tmp/usr/doc/$(package)/copyright
-  endif
-  # Install examples, compressed.
-  ifneq ($(strip $(examples)),)
-	install -d debian/tmp/usr/doc/examples/$(package)
-	cp $(examples) debian/tmp/usr/doc/examples/$(package)
-	gzip -9v debian/tmp/usr/doc/examples/$(package)/*
-  endif
-  # Install other debian files if they exist.
-	-install -m 644 debian/changelog debian/tmp/usr/doc/$(package)/changelog
-	-gzip -9v debian/tmp/usr/doc/$(package)/changelog
-	-install -m 644 debian/conffiles debian/tmp/DEBIAN/conffiles
-	-install -m 755 debian/preinst debian/tmp/DEBIAN/preinst
-	-install -m 755 debian/postinst debian/tmp/DEBIAN/postinst
-	-install -m 755 debian/prerm debian/tmp/DEBIAN/prerm
-	-install -m 755 debian/postrm debian/tmp/DEBIAN/postrm
-  # Generate control file.
-	dpkg-shlibdeps $(binfiles)
-	dpkg-gencontrol
-  # Set permissions.
-	[ "`whoami`" != root ] && \
-		echo -e "\n ** Enter root password to set file permissions."; \
-	debian/rules setperms
-#	echo debian/rules setperms
-#	su -c "debian/rules setperms"
-  # Actually build the .deb file.
-	echo dpkg --build debian/tmp ..
-	dpkg --build debian/tmp ..
+binary-arch: build install
+# We have nothing to do by default.
 
-# This must be run suid root, it sets the file permissions in debian/tmp
-setperms:
-	chown -R root.root debian/tmp
-	chmod -R g-ws debian/tmp
-	$(ch_commands)
+# Build architecture-independent files here.
+binary-indep: build install
+#	dh_testversion
+	dh_testdir
+	dh_testroot
+	dh_installdocs README*
+	dh_installexamples
+	dh_installmenu
+#	dh_installemacsen
+#	dh_installinit
+	dh_installcron
+	dh_installmanpages
+#	dh_undocumented
+	dh_installchangelogs
+	dh_link
+	dh_strip
+	dh_compress
+	dh_fixperms
+	# You may want to make some executables suid here
+	dh_suidregister
+#	dh_makeshlibs
+	dh_installdeb
+#	dh_perl 
+	dh_shlibdeps
+	dh_gencontrol
+	dh_md5sums
+	dh_builddeb
 
-define checkdir
-	@test -f $(test_file) -a -f debian/rules || (echo -e "\n\
-	** \"$(test_file)\" or \"debian/rules\" does not exist.\n\
-	** Either \"$(package)\" is not unpacked in this directory, or\n\
-	** an incorrect test_file is specified in debian/config.\n" && false)
-endef
-
-# This rm's the debian/tmp directory.
-define clean_tmp
-	-rm -rf debian/tmp >/dev/null 2>&1
-	@if [ -d debian/tmp ]; then \
-		if  [ "`whoami`" != root ]; then \
-			echo -e "\n ** Enter root password to remove debian/tmp."; \
-		fi; \
-		rm -rf debian/tmp; \
-	fi
-endef
+source diff:                                                                  
+	@echo >&2 'source and diff are obsolete - use dpkg-source -b'; false
 
 binary: binary-indep binary-arch
-.PHONY: clean setperms binary
+.PHONY: build clean binary-indep binary-arch binary

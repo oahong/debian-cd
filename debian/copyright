@@ -1,8 +1,8 @@
-slink_cd was originally written and is maintained by Steve McIntyre
-<stevem@chiark.greenend.org.uk>. Many others have contributed
-patches. The license used is the
+debian-cd (formerly known as YACS)
 
-                  GNU GENERAL PUBLIC LICENSE
-                       Version 2, June 1991
+Copyright 1999 Raphaël Hertzog <hertzog@debian.org>
 
-You may apply this or any later version, at your option.
+This set of tools is licensed under the General Public License
+version 2 or any later version. You can find it in 
+/usr/share/common-licenses/GPL on a Debian GNU system.
+
