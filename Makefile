@@ -167,13 +167,6 @@ ifndef NONUS
 	@echo If we have FORCENONUSONCD1 set, we must also have NONUS set; false
 endif
 endif
-ifneq "$(DOJIGDO)" "0"
-ifndef JIGDOCMD
-	@echo JIGDOCMD undefined -- set up CONF.sh; false
-endif
-else
-export JIGDOCMD=false
-endif
 
 ## INITIALIZATION ##
 
