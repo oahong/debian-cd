@@ -4,17 +4,34 @@
 
 SECTIONS="admin base comm devel doc editors electronics games graphics \
           hamradio interpreters libs mail math misc net news oldlibs \
-	  otherosfs shells sound tex text utils web x11"
+	  otherosfs science shells sound tex text utils web x11"
 
 set -e
 
+# There's no difference between NONFREE and EXTRANONFREE for this script
+if [ -n "$EXTRANONFREE" ]
+then
+	NONFREE=1
+fi
+
 cd $1
 
-ln -sf . debian
-mkdir -p dists/$CODENAME
-ln -sf $CODENAME dists/stable
-ln -sf $CODENAME dists/unstable
-ln -sf $CODENAME dists/frozen
+if [ ! -e debian ] ; then
+	ln -sf . debian
+fi
+
+if [ ! -d dists/$CODENAME ] ; then
+	mkdir -p dists/$CODENAME
+	ln -sf $CODENAME dists/stable
+	ln -sf $CODENAME dists/unstable
+	ln -sf $CODENAME dists/frozen
+fi
+
+# Commidity link for tools which want local in dists/local/local ...
+if [ -n "$LOCAL" ]
+then
+    ln -sf $CODENAME dists/local
+fi
 
 for i in $SECTIONS
 do
@@ -28,6 +45,11 @@ do
 		mkdir -p dists/$CODENAME/non-free/binary-$ARCH/$i
 		mkdir -p dists/$CODENAME/non-free/binary-all/$i
 		mkdir -p dists/$CODENAME/non-free/source/$i
+	fi
+	if [ -n "$LOCAL" ]; then
+		mkdir -p dists/$CODENAME/local/binary-$ARCH/$i
+		mkdir -p dists/$CODENAME/local/binary-all/$i
+		mkdir -p dists/$CODENAME/local/source/$i
 	fi
 done
 
@@ -50,6 +72,7 @@ elif [ -n "$NONUS" -a "$CODENAME" = "slink" ]; then
 	mkdir -p dists/$CODENAME/non-US/source
 fi
 
-mkdir .disk
-
+if [ ! -d .disk ] ; then
+	mkdir .disk
+fi
 
