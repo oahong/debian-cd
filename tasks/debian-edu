@@ -1,8 +1,8 @@
 education-common
-education-main-server
 education-networked
-education-laptop
+education-main-server
 education-workstation
 education-thin-client-server
+education-laptop
 education-standalone
 education-standalone-extras
