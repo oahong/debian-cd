@@ -4,12 +4,30 @@
  *
  */
 
-/* Be sure to have all packages for the standard tasks & profiles on
- * the first CD */
-#include <potato/@ARCH@/Task_ALL>
-#include <potato/@ARCH@/Profile_ALL>
+/* The potato CD set does now use empty package called task-*
+   to select the packages in the initial installation */
+
+#if (FORCENONUSONCD1 == 1)
+#include "Debian_potato_nonUS"
+#endif
+
+#include <interesting-tasks-potato>
+
+/* Packages that really should be on CD 1 */
+#include <forcd1>
+
+#include <xservers-XFree3>
+
+#include <kernel-related-potato>
+
+#include <interesting-redhat>
+
+#include <interesting-fromcd23>
 
 /* List of packages that may still fit on the first CD */
+#include <linuxtag2000>
+
+#include <popularity-contest-potato>
 
 /* Other packages to put on the others CDs */
 
