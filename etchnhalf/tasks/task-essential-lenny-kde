@@ -1,0 +1,81 @@
+/* Essential task packages for KDE
+ *
+ * The list should be regenerated from time to time, using the
+ * update-tasks target of the Makefile.
+ *
+ * Last updated: $Date$
+ */
+kde-core
+kdeadmin
+kdeartwork
+kdegraphics
+kdemultimedia
+kdenetwork
+kdeutils
+kdepim
+kdm
+xorg
+xserver-xorg-video-all
+xserver-xorg-input-all
+desktop-base
+menu
+iceweasel
+alsa-utils
+alsa-base
+eject
+acpid
+hibernate
+anacron
+language-env
+language-env
+language-env
+locales
+manpages-pt
+language-env
+jfbterm
+zhcon
+jfbterm
+locales
+console-cyrillic
+t1-cyrillic
+language-env
+language-env
+manpages-fr
+language-env
+manpages-de
+language-env
+language-env
+gsfonts-x11
+ttf-dejavu
+ttf-freefont
+xfonts-base
+language-env
+manpages-it
+jfbterm
+unifont
+manpages-ja
+lv
+language-env
+language-env
+ttf-malayalam-fonts
+scim-tables-additional
+scim-gtk2-immodule
+locales
+language-env
+language-env
+manpages-pl
+language-env
+language-env
+language-env
+locales
+language-env
+manpages-ru
+language-env
+manpages-es
+locales
+language-env
+language-env
+language-env
+locales
+manpages-tr
+language-env

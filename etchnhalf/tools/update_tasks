@@ -1,0 +1,147 @@
+#!/bin/sh
+set -e
+
+CODENAME="$1"
+if [ -z "$CODENAME" ]; then
+    echo "usage: update_tasks CODENAME" >&2
+    exit 1
+fi
+
+if [ "$MIRROR"x == ""x ] ; then
+    echo "update_tasks needs to know where the mirror is" >&2
+    exit 1
+fi
+
+update_full_list () {
+    file=$1
+    tasklist=$2
+    pkgfile=$3
+
+    grep '\*' $file > $file.new
+    (grep -Ev "^(#.*)?[[:space:]]*$" $tasklist ; echo DONE ; cat $pkgfile) | mawk '
+    /DONE/ {
+        in_packages = 1
+        next
+    }
+    /.*/ {
+        if (!in_packages) {
+            tasklist[$1] = num_tasks
+            num_tasks++
+        }
+    }
+    /^Package: / {
+        if (in_packages) {
+            pkgname = $2
+            next
+        }
+    }
+    /^Task: / {
+        if (in_packages) {
+            # Parse the Tasks: line, splitting into array "these"
+            gsub("Task: ", "", $0)
+            gsub(",", "", $0)
+            split($0, these)
+
+            # And see if we have any matches
+            for (task in these) {
+                for (taskname in tasklist) {
+                    if (these[task] == taskname) {
+                        printf("%d:%s\n", tasklist[taskname], pkgname)
+                        next
+                    }
+                }
+            }
+        }
+        next
+    }' | sort -n | cut -d: -f2 >> $file.new    
+    mv $file.new $file
+}
+
+update_essential_list () {
+    file=$1
+    tasklist=$2
+    desktoptask=$3
+    tasksel=$4
+
+    grep '\*' $file > $file.new
+    (grep -Ev "^(#.*)?[[:space:]]*$" $tasklist ;
+		echo DONE ;
+		cat $tasksel/usr/share/tasksel/debian-tasks.desc) | mawk -v DT=$3 '
+
+    /DONE/ {
+        in_tasks = 1
+        next
+    }
+    /^ / {
+        if (in_key) {
+            printf("%d:%s\n", tasklist[cur_task], $1)
+            next
+        }
+    }
+    /.*/ {
+        if (!in_tasks) {
+            tasklist[$1] = num_tasks
+            num_tasks++
+        }
+        if (in_key) {
+            in_key = 0
+        }
+    }
+    /^Task: / {
+        if (in_tasks) {
+            cur_task = $2
+            next
+        }
+    }
+    /^Key: / {
+        if (in_tasks) {
+            for (taskname in tasklist) {
+                if (taskname == cur_task) {
+                    if ((cur_task != "gnome-desktop") &&
+                        (cur_task != "kde-desktop") &&
+                        (cur_task != "xfce-desktop")) {
+                        in_key = 1
+                    }
+                    if (cur_task == DT) {
+                        in_key = 1
+                    }
+                }
+            }
+        }
+        next
+    }' | sort -s -n -k1 | cut -d: -f2 >> $file.new
+    mv $file.new $file
+}
+
+# We need to gunzip a copy of the appropriate Packages.gz file
+# Assume i386, use the $CODENAME main Packages file
+TMP_PKG=$BDIR/Packages
+zcat $MIRROR/dists/$CODENAME/main/binary-i386/Packages.gz > $TMP_PKG
+
+# Now grab the appropriate tasksel package
+TASKSEL_DEB=$MIRROR/`mawk '
+    /^Package: tasksel-data$/ { found=1 }
+    /^Filename:/              { if (found==1) { print $2; exit } }' $TMP_PKG`
+
+dpkg -x $TASKSEL_DEB $BDIR/tasksel
+
+update_essential_list tasks/task-essential-$CODENAME \
+    tasks/task.list gnome-desktop \
+    $BDIR/tasksel
+
+update_essential_list tasks/task-essential-$CODENAME-kde \
+    tasks/task.list.kde kde-desktop \
+    $BDIR/tasksel
+
+update_essential_list tasks/task-essential-$CODENAME-xfce \
+    tasks/task.list.xfce xfce-desktop \
+    $BDIR/tasksel
+
+update_full_list tasks/task-full-$CODENAME \
+    tasks/task.list $TMP_PKG
+
+update_full_list tasks/task-full-$CODENAME-kde \
+    tasks/task.list.kde $TMP_PKG
+
+update_full_list tasks/task-full-$CODENAME-xfce \
+    tasks/task.list.xfce $TMP_PKG
