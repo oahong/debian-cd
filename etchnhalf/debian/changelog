@@ -1,3 +1,5 @@
+NOTE: This branch is not to be used as basis for an upload of debian-cd!
+
 debian-cd (3.0.5) UNRELEASED; urgency=low
 
   [ Steve McIntyre ]
