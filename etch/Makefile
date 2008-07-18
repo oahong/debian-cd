@@ -63,9 +63,12 @@ BDIR=$(TDIR)/$(CODENAME)
 ADIR=$(APTTMP)
 DB_DIR=$(BDIR)/debootstrap
 
+export DEBOOTSTRAP_DIR := $(DB_DIR)/usr/lib/debootstrap
 export PATH := $(DB_DIR)/usr/sbin:$(PATH)
 
-LATEST_DB := $(shell ls -1tr $(MIRROR)/pool/main/d/debootstrap/debootstrap*all.deb | tail -1)
+#LATEST_DB := $(shell ls -1tr $(MIRROR)/pool/main/d/debootstrap/debootstrap*all.deb | tail -1)
+LATEST_DB := $(shell zcat $(MIRROR)/dists/$(CODENAME)/main/binary-i386/Packages.gz | awk '/\/debootstrap_.*deb/ {print $$2}')
+LATEST_DB := $(MIRROR)/$(LATEST_DB)
 
 ## DEBUG STUFF ##
 
@@ -137,6 +140,10 @@ $(BDIR)/DATE:
 $(DB_DIR): $(LATEST_DB)
 	@rm -rf $(DB_DIR)
 	@dpkg -x $(LATEST_DB) $(DB_DIR)
+	if [ ! -e $(DEBOOTSTRAP_DIR) ] ; then \
+		ln -sf share $(DB_DIR)/usr/lib ; \
+	fi
+
 # Make sure unstable/sid points to testing/etch, as there is no build
 # rule for unstable/sid.
 unstable-map:

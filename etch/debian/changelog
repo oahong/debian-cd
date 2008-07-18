@@ -10,6 +10,8 @@ debian-cd (3.0.3) UNRELEASED; urgency=high
     for "testing". Used in the etch release, and I'll back it out shortly.
   * tools/imagesums: use newer features in latest mkisofs/genisoimage to grab
     pre-calculated MD5 and SHA1 checksums directly from the jigdo file.
+  * Grab correct (Etch) version of debootstrap from the archive to avoid
+    incompatible changes in debootstrap in Lenny.
 
  -- Steve McIntyre <93sam@debian.org>  Wed, 28 Mar 2007 22:57:41 +0100
 
