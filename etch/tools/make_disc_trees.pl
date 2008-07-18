@@ -421,20 +421,22 @@ sub start_disc {
 
     if (defined ($ENV{"EXCLUDE"})) {
         my $excl_file = $ENV{"EXCLUDE"};
-        print LOG "Adding excludes from $excl_file\n";
+        print LOG "Adding excludes from global exclude file $excl_file\n";
         open (EXCLUDE_FILE, "< $excl_file") || die "Can't open exclude file $excl_file: $!\n";
         while (defined (my $excl_pkg = <EXCLUDE_FILE>)) {
             chomp $excl_pkg;
+            print LOG "  $excl_pkg\n";
             push(@exclude_packages, $excl_pkg);
         }
         close (EXCLUDE_FILE);
     }
     if (defined ($ENV{"EXCLUDE$disknum"})) {
         my $excl_file = $ENV{"EXCLUDE$disknum"};
-        print LOG "Adding excludes from $excl_file\n";
+        print LOG "Adding excludes from disk $disknum exclude file $excl_file\n";
         open (EXCLUDE_FILE, "< $excl_file") || die "Can't open exclude file $excl_file: $!\n";
         while (defined (my $excl_pkg = <EXCLUDE_FILE>)) {
             chomp $excl_pkg;
+            print LOG "  $excl_pkg\n";
             push(@exclude_packages, $excl_pkg);
         }
         close (EXCLUDE_FILE);
