@@ -8,6 +8,8 @@ debian-cd (3.0.3) UNRELEASED; urgency=high
     they're no use there
   * Add some munging on the Release files if we're not building
     for "testing". Used in the etch release, and I'll back it out shortly.
+  * tools/imagesums: use newer features in latest mkisofs/genisoimage to grab
+    pre-calculated MD5 and SHA1 checksums directly from the jigdo file.
 
  -- Steve McIntyre <93sam@debian.org>  Wed, 28 Mar 2007 22:57:41 +0100
 
