@@ -38,9 +38,9 @@ if [ $NUM_ARCHES = 1 ] ; then
 			BINARYDISK=1
 			export DISKINFO="Debian GNU/Linux $DEBVERSION \"$CAPCODENAME\" - $OFFICIAL $ARCHES $DISKTYPE Binary-$DISKNUM $BUILD_DATE"
 			if [ $ARCHES = powerpc ] ; then
-				export VOLID="Debian $DEBVERSION ppc Bin-$DISKNUM"
+				export VOLID="Debian $DEBVERSION ppc"
 			else
-				export VOLID="Debian $DEBVERSION $ARCHES Bin-$DISKNUM"
+				export VOLID="Debian $DEBVERSION $ARCHES"
 			fi
 			;;
 	esac
@@ -145,7 +145,13 @@ if [ $DISKNUM = 1 ] ; then
 		fi
 	    fi
 	else
-            echo "not_complete" > $CDDIR/.disk/cd_type
+            if [ $DISKTYPE = NETINST ]; then
+                # ATTENTION: Exception for etchnhalf netinst which can be
+                # used as "CD0" for the regular full CD set.
+                echo "full_cd" > $CDDIR/.disk/cd_type
+            else
+                echo "not_complete" > $CDDIR/.disk/cd_type
+            fi
 	fi
 
 	if [ $NUM_ARCHES -gt 1 ]; then
