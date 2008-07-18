@@ -16,6 +16,7 @@ debian-cd (3.0.3) UNRELEASED; urgency=high
   [ Frans Pop ]
   * Backport compatible improvements in the README.html.in from the Lenny
     version for compatibility between etch and etch-and-a-half images.
+  * generate_di_list: m68k is not a release arch, so remove it
 
  -- Steve McIntyre <93sam@debian.org>  Wed, 28 Mar 2007 22:57:41 +0100
 
