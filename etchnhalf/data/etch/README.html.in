@@ -291,38 +291,40 @@ This disc is labeled
 <tt>&nbsp;
   DISKNAME
 </tt>
+
 <P>
 #ifndef UNOFFEXTRAS
-which means that this disc is number DISKNUM of a set of TOTALNUM discs.
+This is a special installation CD for the "Etch-and-a-half" release. It will
+install Etch, but uses and installs a more recent kernel (version 2.6.24) to
+allow installation of Etch on new systems not supported by the standard Etch
+kernel.
 #if TYPEbinary
-It contains programs ("binaries") for `ARCH' computers.
+The disc contains programs ("binaries") for `ARCH' computers.
 #if ARCHia64 && !ARCHamd64
 <P><strong>Note:</strong> this image only supports systems based on
 Intel Itanium processors; for the more common Intel EM64T processors,
 please see the Debian amd64 architecture.
 #endif
 <P>
-The programs on the Binary discs are ordered by popularity. The Binary-1 disc
-contains the most popular programs and the installation tools; it is possible
-to install and run Debian with only the Binary-1 disc. The other discs, up to
-Binary-TOTALNUM, contain mostly special-interest programs.
+The disc is comparable with a normal "netinst" CD and can be used either by
+itself or in combination with a Debian mirror.
+<P>
+In addition, this CD can also be used in combination with the full CD and DVD
+sets or with the KDE or Xfce CD.
+During the installation you will be asked if the installer should scan any
+additional CDs. At that point you have the option to insert CD1 of a regular
+CD/DVD set for Etch. If you choose to do so any programs included on that CD
+will be available for installation. As many additional CDs (from the same set)
+as you like can be scanned. This CD can thus be thought of as "CD0" of the
+full CD/DVD set.
+<P>
+The programs on the Binary discs from the full CD and DVD sets are ordered by
+popularity. The Binary-1 disc contains the most popular programs. The other
+discs contain mostly special-interest programs.
+
 <p>
-#if OMIT_RELEASE_NOTES
-The Release Notes for "etch" are available on the <A
-href="http://www.debian.org/releases/etch/releasenotes">Debian web
-site</A>.
-#else
-#if DISKNUM == 1
-The Release Notes for Debian GNU/Linux "etch" are included on this disc
-in <A href=%%""doc/release-notes/%%"">/doc/release-notes/</a>, in
-several languages. Additional translations and updated versions for
-the Release Notes may be available from the <A
-href="http://www.debian.org/releases/etch/releasenotes">Debian web
-site</A>.
-#else
-See the first disc in this set for the "etch" Release Notes.
-#endif
-#endif
+Detailed information about the "Etch-and-a-half" release can be found on the
+<A href="http://www.debian.org/releases/etch/etchnhalf">Debian web site</A>.
 #endif
 #if TYPEsource
 This set includes the source code of programs in the Debian OS.
@@ -351,24 +353,17 @@ Installing
  Because Debian is a complete Operating System, the installation procedure
  may seem a bit unusual. You can install Debian GNU/Linux either
  <i>alongside</i> your current OS, or as the <i>only</i> OS on your computer.
-#if OMIT_MANUAL
  <P>
- An <b>Installation Guide</b> for this disc is available from
- <A href="http://www.debian.org/releases/etch/installmanual">the Debian web site</a>.
-#else
+ In order to be able to install the updated kernel, this disc is based on
+ the current release of Debian Installer for Lenny, the next Debian release.
+ This means that there are various important differences in the installation
+ procedure from a standard Etch install. More information can be found on the
+ <A href="http://www.debian.org/releases/etch/debian-installer/etchnhalf">Debian
+ web site</A>.
  <P>
- An <b>Installation Guide</b> is included on this disc at
- <P>
- <tt>&nbsp;
- <A href="doc/manual/en/index.html">doc/manual/en/index.html</a> &nbsp;&nbsp;&nbsp; (English version)</tt>
- <P>
- Several translations of the Installation Guide are included on this disc in
- the <tt><A href="doc">doc/</a></tt> directory, along with various other documents.
- <br>
- Note: additional translations, other formats (like PDF and TXT) and updated 
- versions for the Installation Guide are available from
- <A href="http://www.debian.org/releases/etch/installmanual">the Debian web site</a>.
-#endif
+ This version of the installation system is documented in the Lenny version of
+ the <b>Installation Guide</b>, which is available from the
+ <A href="http://www.debian.org/releases/lenny/installmanual">Debian web site</a>.
  <P>
  Programs and other files that are needed for the installation can be found on
  this disc under
