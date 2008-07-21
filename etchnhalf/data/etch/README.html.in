@@ -354,16 +354,19 @@ Installing
  may seem a bit unusual. You can install Debian GNU/Linux either
  <i>alongside</i> your current OS, or as the <i>only</i> OS on your computer.
  <P>
- In order to be able to install the updated kernel, this disc is based on
- the current release of Debian Installer for Lenny, the next Debian release.
+ <blockquote>
+ <B>Important note</B><br>
+ In order to be able to use the updated kernel, this disc is based on
+ the current release of Debian Installer for <i>Lenny</i>, the next Debian release.
  This means that there are various important differences in the installation
  procedure from a standard Etch install. More information can be found on the
  <A href="http://www.debian.org/releases/etch/debian-installer/etchnhalf">Debian
  web site</A>.
  <P>
- This version of the installation system is documented in the Lenny version of
- the <b>Installation Guide</b>, which is available from the
+ This version of the installation system is documented in the <b><i>Lenny</i>
+ version of the Installation Guide</b>, which is available from the
  <A href="http://www.debian.org/releases/lenny/installmanual">Debian web site</a>.
+ </blockquote>
  <P>
  Programs and other files that are needed for the installation can be found on
  this disc under
