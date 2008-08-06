@@ -267,7 +267,7 @@ if [ "$THISTYPE" = "isolinux" ]; then
 			ppmtolss16 "#ffffff=7" "#000000=0" > boot$N/isolinux/splash.rle
 	fi
 
-	sed -i "s|built on|built $BUILD_DATE; d-i|" boot$N/isolinux/f1.txt
+	sed -i -e "s|Debian.*installation|Debian GNU/Linux etch-and-a-half installation|" -e "s|built on|built $BUILD_DATE; d-i|" boot$N/isolinux/f1.txt
 
 	if [ -n "$KERNEL_PARAMS" ]; then
 		# Substitute custom kernel params into the isolinux config
