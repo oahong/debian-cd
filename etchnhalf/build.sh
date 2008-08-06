@@ -10,7 +10,7 @@ fi
 echo "Using CONF from $CF"
 
 # HACKALERT: Override for etchnhalf
-DEBVERSION="$DEBVERSION etchnhalf"
+DEBVERSION="$DEBVERSION-etchnhalf"
 
 if [ -z "$COMPLETE" ] ; then
     export COMPLETE=1
