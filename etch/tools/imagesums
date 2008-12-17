@@ -2,15 +2,19 @@
 
 cd $1
 
-:> MD5SUMS
-:> SHA1SUMS
+if [ "$2"x != ""x ] ; then
+    EXT=".$2"
+fi
+
+:> MD5SUMS$EXT
+:> SHA1SUMS$EXT
 
 case $DOJIGDO in
 	0)
 		for file in `find * -name \*.iso`
 		do
-			md5sum $file >> MD5SUMS
-			sha1sum $file >> SHA1SUMS
+			md5sum $file >> MD5SUMS$EXT
+			sha1sum $file >> SHA1SUMS$EXT
 		done
 		;;
 	1|2)
@@ -18,25 +22,25 @@ case $DOJIGDO in
 		do
             iso=${file%%.jigdo}.iso
 
-			grep -q $iso MD5SUMS
+			grep -q $iso MD5SUMS$EXT
             if [ $? -ne 0 ] ; then
 			    MD5=`zcat -f $file | awk '/Image Hex MD5Sum/ {print $5}'`
                 if [ "$MD5"x != ""x ] ; then
-                    echo "$MD5  $iso" >> MD5SUMS
+                    echo "$MD5  $iso" >> MD5SUMS$EXT
                 else
                     echo "Jigdo file does not contain the Image MD5, calculating by hand"
-                    md5sum $iso >> MD5SUMS
+                    md5sum $iso >> MD5SUMS$EXT
                 fi
             fi
 
-			grep -q $iso SHA1SUMS
+			grep -q $iso SHA1SUMS$EXT
             if [ $? -ne 0 ] ; then
 			    SHA1=`zcat -f $file | awk '/Image Hex SHA1Sum/ {print $5}'`
                 if [ "$SHA1"x != ""x ] ; then
-                    echo "$SHA1  $iso" >> SHA1SUMS
+                    echo "$SHA1  $iso" >> SHA1SUMS$EXT
                 else
                     echo "Jigdo file does not contain the Image SHA1, calculating by hand"
-                    sha1sum $iso >> SHA1SUMS
+                    sha1sum $iso >> SHA1SUMS$EXT
                 fi
             fi
 		done
