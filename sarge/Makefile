@@ -440,6 +440,7 @@ $(BDIR)/CD1/.disk/info:
 		num=$${i%%.packages}; num=$${num##$(BDIR)/}; \
 		dir=$(BDIR)/CD$$num; \
 		echo -n $(BINDISKINFO) | sed 's/_NONUS//g' > $$dir/.disk/info; \
+		echo -n $(BINDISKINFOND) | sed 's/_NONUS//g' > $(BDIR)/$$num.diskinfo; \
 		echo '#define DISKNAME ' $(BINDISKINFOND) | sed 's/_NONUS//g' \
 					> $$dir/README.diskdefines; \
 		echo '#define TYPE  binary' \
@@ -471,6 +472,7 @@ $(SDIR)/CD1/.disk/info:
 		num=$${i%%.sources}; num=$${num##$(SDIR)/}; \
 		dir=$(SDIR)/CD$$num; \
 		echo -n $(SRCDISKINFO) | sed 's/_NONUS//g' > $$dir/.disk/info; \
+		echo -n $(SRCDISKINFOND) | sed 's/_NONUS//g' > $(SDIR)/$$num.diskinfo; \
 		echo '#define DISKNAME ' $(SRCDISKINFOND) | sed 's/_NONUS//g' \
 					> $$dir/README.diskdefines; \
 		echo '#define TYPE  source' \
@@ -875,10 +877,10 @@ images: bin-images src-images
 #    2    jigdo, cleanup_jigdo
 #
 bin-images: ok bin-md5list $(OUT)
-	$(make_image) $(BDIR) $(ARCH) $(OUT) $(DOJIGDO) $(DEBVERSION) $(MIRROR) $(MKISOFS) $(MKISOFS_OPTS) $(JIGDO_OPTS) $(JIGDO_CLEANUP)
+	$(make_image) "$(BDIR)" "$(ARCH)" "$(OUT)" "$(DOJIGDO)" "$(DEBVERSION)" "$(MIRROR)" "$(MKISOFS)" "$(MKISOFS_OPTS)" "$(JIGDO_OPTS)" "$(jigdo_cleanup)"
 
 src-images: ok src-md5list $(OUT)
-	$(make_image) $(SDIR) source $(OUT) $(DOJIGDO) $(DEBVERSION) $(MIRROR) $(MKISOFS) $(MKISOFS_OPTS) $(JIGDO_OPTS) $(JIGDO_CLEANUP)
+	$(make_image) "$(SDIR)" "source" "$(OUT)" "$(DOJIGDO)" "$(DEBVERSION)" "$(MIRROR)" "$(MKISOFS)" "$(MKISOFS_OPTS)" "$(JIGDO_OPTS)" "$(jigdo_cleanup)"
 
 check-number-given:
 	@test -n "$(CD)" || (echo "Give me a CD=<num> parameter !" && false)
@@ -890,21 +892,7 @@ src-image: check-number-given src-images
 
 #Calculate the md5sums for the images (if available), or get from templates
 imagesums:
-	$(Q)cd $(OUT); :> MD5SUMS; for file in `find * -name \*.raw`; do \
-		$(md5sum) $$file >>MD5SUMS; \
-	done; \
-	for file in `find * -name \*.template`; do \
-		if [ "`tail --bytes=33 "$$file" | head --bytes=1 | od -tx1 -An | sed -e 's/ //g'`" != 05 ]; then \
-			echo "Possibly invalid template $$file"; exit 1; \
-		fi; \
-		grep -q " $${file%%.template}.raw"'$$' MD5SUMS \
-		 || echo "`tail --bytes=26 "$$file" | head --bytes=16 | od -tx1 -An | sed -e 's/ //g'`  $${file%%.template}.raw" >>MD5SUMS; \
-	done
-
-# Likewise, the file size can be extracted from the .template with:
-# tail --bytes=32 $$file | head --bytes=6 | od -tx1 -An \
-#  | tr ' abcdef' '\nABCDEF' | tac | tr '\n' ' ' \
-#  | sed -e 's/ //g; s/^.*$/ibase=16 & /' | tr ' ' '\n' | bc
+	$(Q)$(BASEDIR)/tools/imagesums $(OUT)
 
 ## MISC TARGETS ##
 
@@ -919,23 +907,23 @@ conf:
 
 mirrorcheck-binary: ok
 	rm -f $(BDIR)/md5-check
-	$(Q)$(grab_md5) $(MIRROR) $(ARCH) $(CODENAME) $(BDIR)/md5-check
+	$(Q)$(grab_md5) $(MIRROR) $(ARCH) $(CODENAME) $(CODENAME) $(BDIR)/md5-check
 	if [ -n "$(NONUS)" ]; then \
-		$(grab_md5) $(NONUS) $(ARCH) $(CODENAME) $(BDIR)/md5-check; \
+		$(grab_md5) $(NONUS) $(ARCH) $(CODENAME) $(CODENAME) $(BDIR)/md5-check; \
 	fi
 	$(Q)if [ -e $(BASEDIR)/data/$(CODENAME)/$(ARCH)/extra-sources ]; then \
 		echo "Extra dedicated source added; need to grab source MD5 info too"; \
-		$(Q)$(grab_md5) $(MIRROR) source $(CODENAME) $(BDIR)/md5-check; \
+		$(Q)$(grab_md5) $(MIRROR) source $(CODENAME) $(CODENAME) $(BDIR)/md5-check; \
 		if [ -n "$(NONUS)" ]; then \
-			$(grab_md5) $(NONUS) source $(CODENAME) $(BDIR)/md5-check; \
+			$(grab_md5) $(NONUS) source $(CODENAME) $(CODENAME) $(BDIR)/md5-check; \
 		fi; \
 	fi
 
 mirrorcheck-source: ok
 	rm -f $(SDIR)/md5-check
-	$(Q)$(grab_md5) $(MIRROR) source $(CODENAME) $(SDIR)/md5-check
+	$(Q)$(grab_md5) $(MIRROR) source $(CODENAME) $(CODENAME) $(SDIR)/md5-check
 	if [ -n "$(NONUS)" ]; then \
-		$(grab_md5) $(NONUS) source $(CODENAME) $(SDIR)/md5-check; \
+		$(grab_md5) $(NONUS) source $(CODENAME) $(CODENAME) $(SDIR)/md5-check; \
 	fi
 
 update-popcon:

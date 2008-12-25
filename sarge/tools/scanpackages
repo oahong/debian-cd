@@ -171,7 +171,7 @@ done
 # Nasty hack - we may need to look at extra override files from sid.
 # See if the extra override exists; if not redirect.
 EXTRA_CODENAME=$CODENAME
-if [ ! -e $BDIR/indices/override.$EXTRA_CODENAME.extra.main.gz ] ; then
+if [ ! -e $BDIR/indices/override.$EXTRA_CODENAME.extra.main ] ; then
     EXTRA_CODENAME=sid
 fi
 cat >$PREFIX.generate-binary <<EOF
@@ -246,7 +246,8 @@ fi
 # Creating the indices directory
 if [ ! -d "$BDIR/indices" ]; then
     mkdir $BDIR/indices
-    cp $MIRROR/indices/* $BDIR/indices/
+    cp -av $MIRROR/indices/*"$CODENAME"* $BDIR/indices/
+    cp -av $MIRROR/indices/*md5* $BDIR/indices/
     if [ -n "$LOCALDEBS" -a -d $LOCALDEBS/indices ]; then
          cp $LOCALDEBS/indices/* $BDIR/indices/
     fi
@@ -267,7 +268,7 @@ if [ ! -d "$BDIR/indices" ]; then
 fi
 if [ -n "$NONUS" -a ! -d "$BDIR/indices-non-US" ]; then
     mkdir $BDIR/indices-non-US
-    cp $NONUS/indices-non-US/* $BDIR/indices-non-US/
+    cp -av $NONUS/indices-non-US/* $BDIR/indices-non-US/
     gunzip -f $BDIR/indices-non-US/*.gz
     for SECT in `echo $SECTIONSNONUS | sed -e 's#non-US/##g'`; do
 	touch $BDIR/indices-non-US/override.$CODENAME.$SECT

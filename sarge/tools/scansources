@@ -6,7 +6,7 @@
 # This script will create the Sources.gz files
 # First arg = directory of the CD
 
-set -e
+#set -e
 
 SDIR=$TDIR/$CODENAME-src
 PREFIX=`echo $1 | sed "s?$SDIR/CD?$SDIR/?"`
@@ -135,7 +135,7 @@ if [ ! -d "$SDIR/indices" ]; then
 fi
 if [ -n "$NONUS" -a ! -d "$SDIR/indices-non-US" ]; then
     mkdir $SDIR/indices-non-US
-    cp $NONUS/indices-non-US/* $SDIR/indices-non-US/
+    $NONUS/indices-non-US/* $SDIR/indices-non-US/
     gunzip -f $SDIR/indices-non-US/*.gz
     for SECT in `echo $SECTIONSNONUS | sed -e 's#non-US/##g'`; do
         touch $SDIR/indices-non-US/override.$CODENAME.$SECT

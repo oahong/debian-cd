@@ -31,7 +31,7 @@ do
 	for FILE in $FILES
 	do
 		echo "  $FILE"
-		cp -al $MIRROR/$FILE $BDIR/CD$DISKNUM/extra-sources
+		cp -aL $MIRROR/$FILE $BDIR/CD$DISKNUM/extra-sources
 	done
 done
 

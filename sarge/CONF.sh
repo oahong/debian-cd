@@ -23,14 +23,15 @@ unset EXCLUDE           || true
 unset SRCEXCLUDE        || true
 unset NORECOMMENDS      || true
 unset NOSUGGESTS        || true
-unset DOJIGDO           || true
+#unset DOJIGDO           || true
+unset JIGDOCMD          || true
 unset JIGDOTEMPLATEURL  || true
-unset JIGDOFALLBACKURLS || true
+#unset JIGDOFALLBACKURLS || true
 unset JIGDOINCLUDEURLS  || true
 unset JIGDOSCRIPT       || true
 unset JIGDO_OPTS        || true
-unset DEFBINSIZE        || true
-unset DEFSRCSIZE        || true
+#unset DEFBINSIZE        || true
+#unset DEFSRCSIZE        || true
 unset FASTSUMS          || true
 unset PUBLISH_URL       || true
 unset PUBLISH_NONUS_URL || true
@@ -39,43 +40,38 @@ unset UDEB_INCLUDE      || true
 unset UDEB_EXCLUDE      || true
 unset BASE_INCLUDE      || true
 unset BASE_EXCLUDE      || true
-unset INSTALLER_CD      || true
-unset MAXCDS            || true
-unset SPLASHPNG         || true
-unset OMIT_MANUAL	    || true
-unset OMIT_RELEASE_NOTES || true
+#unset INSTALLER_CD      || true
+
 
 # The debian-cd dir
 # Where I am (hoping I'm in the debian-cd dir)
 export BASEDIR=`pwd`
 
-# Building etch cd set ...
-export CODENAME=etch
+export DI=sarge
 
-# By default use Debian installer packages from $CODENAME
+# Building sarge cd set ...
+export CODENAME=sarge
+
 if [ ! "$DI_CODENAME" ]
 then
   export DI_CODENAME=$CODENAME
 fi
 
-# If set, controls where the d-i components are downloaded from.
-# This may be an url, or "default", which will make it use the default url
-# for the daily d-i builds. If not set, uses the official d-i images from
-# the Debian mirror.
-#export DI_WWW_HOME=default
-
 # Version number, "2.2 r0", "2.2 r1" etc.
-export DEBVERSION="3.1"
+export DEBVERSION="3.1 r8"
 
 # Official or non-official set.
 # NOTE: THE "OFFICIAL" DESIGNATION IS ONLY ALLOWED FOR IMAGES AVAILABLE
 # ON THE OFFICIAL DEBIAN CD WEBSITE http://cdimage.debian.org
-export OFFICIAL="Unofficial"
-#export OFFICIAL="Official"
+#export OFFICIAL="Unofficial"
+export OFFICIAL="Official"
 #export OFFICIAL="Official Beta"
 
 # ... for arch  
-export ARCH=`dpkg --print-architecture`
+if [ ! "$ARCH" ]
+then
+  export ARCH=`dpkg --print-installation-architecture`
+fi
 
 # IMPORTANT : The 4 following paths must be on the same partition/device.
 #	      If they aren't then you must set COPYLINK below to 1. This
@@ -83,7 +79,12 @@ export ARCH=`dpkg --print-architecture`
 #	      images, however. Also, if you are using an NFS partition for
 #	      some part of this, you must use this option.
 # Paths to the mirrors
-export MIRROR=/ftp/debian
+if [ "$MIRROR"x = ""x ] ; then
+    export MIRROR=/org/cdbuilder.debian.org/src/ftp/debian
+fi
+if [ "$ARCH" = "amd64" ] ; then 
+	export MIRROR=/org/cdbuilder.debian.org/src/ftp/debian-amd64/debian-amd64
+fi
 
 # Comment the following line if you don't have/want non-US
 #export NONUS=/ftp/debian-non-US
@@ -94,14 +95,16 @@ export MIRROR=/ftp/debian
 #export FORCENONUSONCD1=1
 
 # Path of the temporary directory
-export TDIR=/ftp/tmp
+export TDIR=/org/cdbuilder.debian.org/src/deb-cd/tmp/"$INSTALLER_CD""$DI""$ARCH"
 
 # Path where the images will be written
-export OUT=/rack/debian-cd
+if [ "$OUT"x = ""x ] ; then
+    export OUT=/org/cdbuilder.debian.org/dst/deb-cd/tmp/"$INSTALLER_CD""$DI""$ARCH"
+fi
 
 # Where we keep the temporary apt stuff.
 # This cannot reside on an NFS mount.
-export APTTMP=/ftp/tmp/apt
+export APTTMP=$TDIR/apt
 
 # Do I want to have NONFREE merged in the CD set
 # export NONFREE=1
@@ -144,7 +147,7 @@ export CONTRIB=1
 # export COPYLINK=1
 
 # Options
-# export MKISOFS=mkisofs
+export MKISOFS="$BASEDIR/../mkisofs/usr/bin/mkisofs"
 # export MKISOFS_OPTS="-r"		#For normal users
 # export MKISOFS_OPTS="-r -F ."	#For symlink farmers
 
@@ -152,7 +155,7 @@ export CONTRIB=1
 export ISOLINUX=1
 
 # uncomment this to if you want to see more of what the Makefile is doing
-#export VERBOSE_MAKE=1
+export VERBOSE_MAKE=1
 
 # uncoment this to make build_all.sh try to build a simple CD image if
 # the proper official CD run does not work
@@ -161,18 +164,18 @@ export ISOLINUX=1
 # Set your disk size here in MB. Used in calculating package and
 # source file layouts in build.sh and build_all.sh. Defaults are for
 # CD-R, try ~4600 for DVD-R.
-export DEFBINSIZE=630
-export DEFSRCSIZE=635
+if [ ! "$DEFBINSIZE" ] ; then export DEFBINSIZE=639 ; fi
+if [ ! "$DEFSRCSIZE" ] ; then export DEFSRCSIZE=639 ; fi
 
 # We don't want certain packages to take up space on CD1...
-export EXCLUDE="$BASEDIR"/tasks/exclude-$CODENAME
+export EXCLUDE="$BASEDIR"/tasks/exclude-sarge
 # ...but they are okay for other CDs (UNEXCLUDEx == may be included on CD >= x)
-export UNEXCLUDE2="$BASEDIR"/tasks/unexclude-CD2-$CODENAME
+export UNEXCLUDE2="$BASEDIR"/tasks/unexclude-CD2-sarge
 # Any packages listed in EXCLUDE but not in any UNEXCLUDE will be
 # excluded completely.
 
 # We also exclude some source packages
-#export SRCEXCLUDE="$BASEDIR"/tasks/exclude-src-$CODENAME
+#export SRCEXCLUDE="$BASEDIR"/tasks/exclude-src-potato
 
 # Set this if the recommended packages should be skipped when adding 
 # package on the CD.  The default is 'false'.
@@ -191,18 +194,20 @@ export NORECOMMENDS=1
 #     since they need the actual .iso to make it bootable. For these archs,
 #     the temp-iso will be generated, but deleted again immediately after the
 #     jigdo stuff is made; needs temporary space as big as the biggest image.
-#export DOJIGDO=2
+if [ ! "$DOJIGDO" ];then export DOJIGDO=1;fi
 #
 # jigdo-file command & options
 # Note: building the cache takes hours, so keep it around for the next run
-#export JIGDOCMD="/usr/local/bin/jigdo-file --cache=$HOME/jigdo-cache.db"
-#
+#export JIGDOCMD="$BASEDIR/../jigdo/usr/bin/jigdo-file --cache=$TDIR/jigdo-cache.db"
+#export JIGDOCMD="/usr/bin/jigdo-file --cache=$TDIR/jigdo-cache.db"
+
 # HTTP/FTP URL for directory where you intend to make the templates
 # available. You should not need to change this; the default value ""
 # means "template in same dir as the .jigdo file", which is usually
 # correct. If it is non-empty, it needs a trailing slash. "%ARCH%"
 # will be substituted by the current architecture.
 #export JIGDOTEMPLATEURL=""
+#export JIGDOTEMPLATEURL="jigdotemplates/"
 #
 # Name of a directory on disc to create data for a fallback server in. 
 # Should later be made available by you at the URL given in
@@ -211,12 +216,13 @@ export NORECOMMENDS=1
 # files in your FTP archive. Because of the hard links, the dir must
 # be on the same partition as the FTP archive! If unset, no fallback
 # data is created, which may cause problems - see README.
-#export JIGDOFALLBACKPATH="$(OUT)/snapshot/"
+#export JIGDOFALLBACKPATH="$OUT/snapshot/"
 #
 # Space-separated list of label->URL mappings for "jigdo fallback
 # server(s)" to add to .jigdo file. If unset, no fallback URL is
 # added, which may cause problems - see README.
-#export JIGDOFALLBACKURLS="Debian=http://myserver/snapshot/Debian/ Non-US=http://myserver/snapshot/Non-US/"
+if [ ! "$JIGDOFALLBACKURLS" ];then export JIGDOFALLBACKURLS="Debian=http://gluck.debian.org/cdimage/snapshot/cd/$ARCH/Debian/";fi
+#Non-US=http://gluck.debian.org/cdimage/testing/jigdo-area/$ARCH/snapshot/Non-US/";fi
 #
 # Space-separated list of "include URLs" to add to the .jigdo file. 
 # The included files are used to provide an up-to-date list of Debian
@@ -233,25 +239,20 @@ export JIGDOINCLUDEURLS="http://cdimage.debian.org/debian-cd/debian-servers.jigd
 
 # If set, use the md5sums from the main archive, rather than calculating
 # them locally
-#export FASTSUMS=1
+export FASTSUMS=1
 
 # A couple of things used only by publish_cds, so it can tweak the
 # jigdo files, and knows where to put the results.
 # You need to run publish_cds manually, it is not run by the Makefile.
-export PUBLISH_URL="http://cdimage.debian.org/jigdo-area"
-export PUBLISH_NONUS_URL="http://non-US.cdimage.debian.org/jigdo-area"
-export PUBLISH_PATH="/home/jigdo-area/"
+#export PUBLISH_URL="http://cdimage.debian.org/jigdo-area"
+#export PUBLISH_NONUS_URL="http://non-US.cdimage.debian.org/jigdo-area"
+#export PUBLISH_PATH="/home/jigdo-area/"
 
 # Specify files and directories to *exclude* from jigdo processing. These
 # files on each CD are expected to be different to those on the mirror, or
 # are often subject to change. Any files matching entries in this list will
 # simply be placed straight into the template file.
 export JIGDO_EXCLUDE="'README*' /doc/ /md5sum.txt /.disk/ /pics/ 'Release*' 'Packages*' 'Sources*'"
-
-# Specify files that MUST match entries in the externally-supplied
-# md5-list. If they do not, the CD build process will fail; something
-# must have been corrupted. Replaces the old mirrorcheck code.
-export JIGDO_INCLUDE="/pool/"
 
 # Specify the minimum file size to consider for jigdo processing. Any files
 # smaller than this will simply be placed straight into the template file.
@@ -262,10 +263,8 @@ do
     JIGDO_OPTS="$JIGDO_OPTS -jigdo-exclude $EXCL"
 done
 
-for INCL in $JIGDO_INCLUDE
-do
-    JIGDO_OPTS="$JIGDO_OPTS -jigdo-force-md5 $INCL"
-done
+export DEBOOTSTRAP_DIR="$BASEDIR"/../debootstrap/usr/lib/debootstrap/
+export IGNORE_MISSING_BOOT_SCRIPT=1
 
 # Where to find the boot disks
 #export BOOTDISKS=$TOPDIR/ftp/skolelinux/boot-floppies
@@ -291,32 +290,19 @@ done
 
 # Only put the installer onto the cd (set NORECOMMENDS,... as well).
 # INSTALLER_CD=0: nothing special (default)
-# INSTALLER_CD=1: just add debian-installer (use TASK=tasks/debian-installer-$CODENAME)
-# INSTALLER_CD=2: add d-i and base (use TASK=tasks/debian-installer+kernel-$CODENAME)
+# INSTALLER_CD=1: just add debian-installer (use TASK=tasks/debian-installer)
+# INSTALLER_CD=2: add d-i and base (use TASK=tasks/debian-installer+kernel)
 #export INSTALLER_CD=0
 
-# Parameters to pass to kernel when the CD boots. Not currently supported
-# for all architectures.
-#export KERNEL_PARAMS="DEBCONF_PRIORITY=critical"
-
-# If set, limits the number of binary CDs to produce.
-#export MAXCDS=1
-
-# If set, overrides the boot picture used.
-#export SPLASHPNG="$BASEDIR/data/$CODENAME/splash-img.png"
-
-# Used by build.sh to determine what to build, this is the name of a target
-# in the Makefile. Use bin-official_images to build only binary CDs. The
-# default, official_images, builds everything.
-#IMAGETARGET=official_images
-
-# Set to 1 to save space by omitting the installation manual. 
-# If so the README will link to the manual on the web site.
-#export OMIT_MANUAL=1
+# Jeroen: not needed
+#export DELOROOT="$BASEDIR"/../delo
 
 # Set to 1 to save space by omitting the release notes
 # If so we will link to them on the web site.
-export OMIT_RELEASE_NOTES=0
+#export OMIT_RELEASE_NOTES=0
 
 # Set this to override the defaul location
 #export RELEASE_NOTES_LOCATION="http://www.debian.org/releases/$CODENAME"
+if [ "$ARCH" = "amd64" ];then
+   export RELEASE_NOTES_LOCATION="http://amd64.debian.net/docs/release-notes/"
+fi

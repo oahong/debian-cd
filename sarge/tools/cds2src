@@ -234,8 +234,14 @@ if ($complete) {
                        || ($a cmp $b) }
                 grep { not ($included{$_} or $excluded{$_}) } keys %sources) 
     {
-	add_src ($p);
+	if ($p eq "ia32-libs") {
+	    msg(0, "Leaving ia32-libs to the end\n");
+	} else {
+	    add_src ($p);
+	}
     }
+    msg(0, "Now adding ia32-libs\n");
+    add_src("ia32-libs");
 }
 msg(0, "CD $cd will only be filled with $cd_size bytes ...\n");
 

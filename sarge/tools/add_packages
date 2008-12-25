@@ -38,31 +38,31 @@ while (defined($_ = <LIST>)) {
 	# a symbolic link in binary-$ARCH or if arch=all and filename is a
 	# symbolic link we suppose that the link points to
 	# .../binary-all/...  and we reproduce a similar setup on the CD
-	if ($arch eq "all" and (-l "$source/$file" or 
-	    			$file =~ m#/binary-all/#)) {
-	    $file =~ s#/binary-all/#/binary-$ENV{'ARCH'}/#g;
-	    
-	    # Check that the directory where the link will be created does
-	    # exist
-	    my $pdir = "$dir/$file";
-	    $pdir =~ s#[^/]+$##g;
-	    if (! -d $pdir)
-	    {
-		system("mkdir -p $pdir");
-	    }
-
-	    # Create the symlink from binary-$arch to binary-all
-	    if ($section =~ /non-US/ || $file =~ /updates/ ) {
-		$file =~ m#/([^/]+)$# and $name = $1;
-		symlink ("../binary-all/$name", "$dir/$file") ||
-		  die "Can't symlink $dir/$file to ../binary-all/$name: $!";
-	    } else {
-		$file =~ m#/([^/]+/[^/]+)$# and $name = $1;
-		symlink ("../../binary-all/$name", "$dir/$file") ||
-		  die "Can't symlink $dir/$file to ../../binary-all/$name: $!";
-	    }
-	    $file =~ s#/binary-$ENV{'ARCH'}/#/binary-all/#g;
-	}
+#	if ($arch eq "all" and (-l "$source/$file" or 
+#	    			$file =~ m#/binary-all/#)) {
+#	    $file =~ s#/binary-all/#/binary-$ENV{'ARCH'}/#g;
+#	    
+#	    # Check that the directory where the link will be created does
+#	    # exist
+#	    my $pdir = "$dir/$file";
+#	    $pdir =~ s#[^/]+$##g;
+#	    if (! -d $pdir)
+#	    {
+#		system("mkdir -p $pdir");
+#	    }
+#
+#	    # Create the symlink from binary-$arch to binary-all
+#	    if ($section =~ /non-US/ || $file =~ /updates/ ) {
+#		$file =~ m#/([^/]+)$# and $name = $1;
+#		symlink ("../binary-all/$name", "$dir/$file") ||
+#		  die "Can't symlink $dir/$file to ../binary-all/$name: $!";
+#	    } else {
+#		$file =~ m#/([^/]+/[^/]+)$# and $name = $1;
+#		symlink ("../../binary-all/$name", "$dir/$file") ||
+#		  die "Can't symlink $dir/$file to ../../binary-all/$name: $!";
+#	    }
+#	    $file =~ s#/binary-$ENV{'ARCH'}/#/binary-all/#g;
+#	}
 	
 	# And we put the file in the CD tree (with a (hard) link)
 	$realfile = real_file ("$source/$file");
