@@ -8,7 +8,7 @@ SDIR=$TDIR/$CODENAME
 DISK=$1
 ARCHES="$2"
 
-DEBMAINVER="`echo $DEBVERSION | sed -e 's/[ _r].*//'`"
+DEBMAINVER="5.0" # Quick hack for lenny
 
 if [ "$COMPLETE"x = ""x ] ; then
 	COMPLETE=0
