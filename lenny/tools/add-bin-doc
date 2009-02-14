@@ -34,6 +34,13 @@ for file in $MIRROR/README*; do
 	fi
 done
 
+echo "Checking for dedicatiot at $MIRROR/doc/dedication/dedication-"$DEBMAINVER".txt"
+if [ -e $MIRROR/doc/dedication/dedication-"$DEBMAINVER".txt ] ; then
+    echo "  Copying dedication-$DEBMAINVER.*"
+    mkdir -p $dir/doc
+    cp -a $MIRROR/doc/dedication/dedication-"$DEBMAINVER"* $dir/doc
+fi
+
 if [ -f $dir/doc/dedication-$DEBMAINVER.txt ]; then
 	mv $dir/doc/dedication-$DEBMAINVER.txt $dir/dedication.txt
 	ln -s ../dedication.txt $dir/doc/dedication-$DEBMAINVER.txt
