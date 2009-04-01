@@ -282,6 +282,11 @@
       find in the Debian Bug Tracking System; details at <a
       href="http://bugs.debian.org/">bugs.debian.org</a>.</li>
 #endif
+# if (OFFICIAL_VAL == 2)
+     <li>This is an official release of the Debian system. Please report any
+     bugs you find in the Debian Bug Tracking System; details at <A
+     HREF="http://bugs.debian.org/">bugs.debian.org</A>.
+#endif
       <li>If you're reporting bugs against this disc or the installation
       system, please also mention the version of this disc; this can be found
       in the file <tt><a href="/.disk/info">/.disk/info</a></tt>.</li>
