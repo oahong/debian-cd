@@ -6,7 +6,7 @@
 # GNU GPL v2 1st January 2001
 #
 # Quick and dirty script to create update CDs for people to upgrade
-# from an initial stable release (r0) to the latest point release level
+# from potato (2.2r0) to the latest release level
 #
 
 set -e
@@ -24,7 +24,7 @@ MIRROR_AMD64=/org/cdbuilder.debian.org/src/ftp/debian-amd64/debian
 NONFREE=0
 
 # What release version is this?
-VER=4.0r1
+VER=5.0.1
 
 # Is this an official CD?
 OFFICIAL=Official
@@ -32,19 +32,19 @@ OFFICIAL=Official
 
 # Path to use with mkisofs/mkhybrid
 #MKISOFS=${MKISOFS:-"mkhybrid"}
-MKISOFS=$PWD/../mkisofs/usr/bin/mkisofs
+MKISOFS=$PWD/../genisoimage/usr/bin/genisoimage
 
 # Use JTE extensions to mkisofs to make jigdo files?
 JTE=1
 
 # The working directory to use. MUST be on the same partition as the mirror.
-TDIR=/org/cdbuilder.debian.org/src/deb-cd/tmp/etch-update/cd-work
+TDIR=/org/cdbuilder.debian.org/src/deb-cd/tmp/lenny-update/cd-work
 
-# Building etch cd set ...
-CODENAME=etch
+# Building lenny cd set ...
+CODENAME=lenny
 
 # Path where the images will be written
-OUT=/org/cdbuilder.debian.org/src/deb-cd/tmp/etch-update/cd-out
+OUT=/org/cdbuilder.debian.org/src/deb-cd/tmp/lenny-update/cd-out
 
 # Location(s) for the snapshot(s)
 SNAPSHOT='Debian=http://us.cdimage.debian.org/cdimage/snapshot/Debian/ --try-last'
@@ -70,7 +70,7 @@ esac
 # Location of the diff file to use to determine the changes. If you leave
 # this blank, we'll try to determine the changes from the ChangeLog files,
 # which is probably less accurate. 
-DIFF=/home/deb-cd/r0-r1.diff
+DIFF=/home/deb-cd/lists/lenny/r0-r1.diff
 
 if [ "$TYPE" = "cd" ] ; then
     CDSIZE=610 # megabytes, leaving space for metadata
@@ -89,14 +89,13 @@ VERBOSE=2
 GRAB_MD5=$BASEDIR/tools/grab_md5
 export VERBOSE BASEDIR SECTS
 
-FIRSTVER=`echo $VER | sed 's?r.*$?r0?g'`
-VERSPACE=`echo $VER | sed 's?r? r?g'`
+FIRSTVER=`echo $VER | cut -c 1-4`0
 CAPCODE=`perl -e "print ucfirst("$CODENAME")"`
 
-export FIRSTVER VERSPACE CAPCODE
+export FIRSTVER CAPCODE
 
 if [ "$ARCHLIST"x = ""x ] ; then
-    ARCHLIST="alpha amd64 arm hppa i386 ia64 mips mipsel powerpc s390 sparc source" # amd64 # all dealt with specially
+    ARCHLIST="alpha amd64 arm armel hppa i386 ia64 mips mipsel powerpc s390 sparc source" # amd64 # all dealt with specially
 fi
 
 export TDIR NONFREE NONUS VER MIRROR CODENAME OUT BASEDIR
@@ -200,8 +199,19 @@ make_cd () {
 			$OUT/$THISARCH/jigdo-$TYPE/debian-update-$VER-$THISARCH-$TYPEUP-$THISNUM.jigdo \
 			debian-update-$VER-$THISARCH-$TYPEUP-$THISNUM.iso \
 			$OUT debian-update-$VER-$THISARCH-$TYPEUP-$THISNUM.template \
-			"Debian GNU/Linux $VERSPACE - $OFFICIAL $THISARCH $FIRSTVER->$VER update $TYPEUP #$THISNUM"
+			"Debian GNU/Linux $VER - $OFFICIAL $THISARCH $FIRSTVER->$VER update $TYPEUP #$THISNUM"
 		echo $SNAPSHOT >> $OUT/$THISARCH/jigdo-$TYPE/debian-update-$VER-$THISARCH-$TYPEUP-$THISNUM.jigdo
+        MD5=`cat $OUT/$THISARCH/jigdo-$TYPE/debian-update-$VER-$THISARCH-$TYPEUP-$THISNUM.jigdo | \
+            awk '/Image Hex MD5Sum/ {print $5}'`
+        echo "$MD5  debian-update-$VER-$THISARCH-$TYPEUP-$THISNUM.iso" >> $OUT/$THISARCH/jigdo-$TYPE/MD5SUMS.update
+        echo "$MD5  debian-update-$VER-$THISARCH-$TYPEUP-$THISNUM.iso" >> $OUT/$THISARCH/iso-$TYPE/MD5SUMS.update
+        SHA1=`cat $OUT/$THISARCH/jigdo-$TYPE/debian-update-$VER-$THISARCH-$TYPEUP-$THISNUM.jigdo | \
+            awk '/Image Hex SHA1Sum/ {print $5}'`
+        echo "$SHA1  debian-update-$VER-$THISARCH-$TYPEUP-$THISNUM.iso" >> $OUT/$THISARCH/jigdo-$TYPE/SHA1SUMS.update
+        echo "$SHA1  debian-update-$VER-$THISARCH-$TYPEUP-$THISNUM.iso" >> $OUT/$THISARCH/iso-$TYPE/SHA1SUMS.update
+        gzip -9 $OUT/$THISARCH/jigdo-$TYPE/debian-update-$VER-$THISARCH-$TYPEUP-$THISNUM.jigdo
+        mv -v $OUT/$THISARCH/jigdo-$TYPE/debian-update-$VER-$THISARCH-$TYPEUP-$THISNUM.jigdo.gz \
+            $OUT/$THISARCH/jigdo-$TYPE/debian-update-$VER-$THISARCH-$TYPEUP-$THISNUM.jigdo
 	else
 		${MKISOFS} -J -r -V "Debian $VER update $TYPEUP" -o \
 		$OUT/iso-$TYPE/$CODENAME-update-$THISARCH-$TYPEUP-$THISNUM.raw \
