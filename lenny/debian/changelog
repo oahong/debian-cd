@@ -1,3 +1,9 @@
+debian-cd (3.1.1lenny1) UNRELEASED; urgency=low
+
+  * sparc: display message for unsupported subarchitectures.
+
+ -- Frans Pop <fjp@debian.org>  Sat, 13 Jun 2009 16:48:51 +0200
+
 debian-cd (3.1.1) unstable; urgency=high
 
   [ Frans Pop ]
