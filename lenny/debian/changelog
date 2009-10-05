@@ -1,6 +1,10 @@
 debian-cd (3.1.1lenny1) UNRELEASED; urgency=low
 
+  [ Frans Pop ]
   * sparc: display message for unsupported subarchitectures.
+
+  [ Steve McIntyre ]
+  * Fix link in README.html.in for lenny. (#542191)
 
  -- Frans Pop <fjp@debian.org>  Sat, 13 Jun 2009 16:48:51 +0200
 
