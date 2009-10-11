@@ -2,6 +2,9 @@ debian-cd (3.1.1lenny1) UNRELEASED; urgency=low
 
   [ Frans Pop ]
   * sparc: display message for unsupported subarchitectures.
+  * s390: Add boot files specifying offset and size of the initrd for booting
+    from CD. Change is based on SuSE's CD boot. Many thanks to Adam Thornton,
+    Mark Post and Bastian Blank for providing the pointers to the missing bits.
 
   [ Steve McIntyre ]
   * Fix link in README.html.in for lenny. (#542191)
