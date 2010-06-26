@@ -14,7 +14,7 @@ set -e
 # Configuration goes here.
 
 # Where is your mirror?
-MIRROR_NORM=/org/cdbuilder.debian.org/src/ftp/debian
+MIRROR_NORM=/mnt/cd-raid0/ftp/debian/
 MIRROR_AMD64=/org/cdbuilder.debian.org/src/ftp/debian-amd64/debian
 
 # If you have a non-US mirror, where is it? Leave blank if you don't have one.
@@ -24,7 +24,7 @@ MIRROR_AMD64=/org/cdbuilder.debian.org/src/ftp/debian-amd64/debian
 NONFREE=0
 
 # What release version is this?
-VER=5.0.3
+VER=5.0.5
 
 # Is this an official CD?
 OFFICIAL=Official
@@ -32,19 +32,19 @@ OFFICIAL=Official
 
 # Path to use with mkisofs/mkhybrid
 #MKISOFS=${MKISOFS:-"mkhybrid"}
-MKISOFS=$PWD/../genisoimage/usr/bin/genisoimage
+MKISOFS="$PWD/../genisoimage -jigdo-template-compress bzip2 -r -checksum_algorithm_iso md5,sha1,sha256,sha512"
 
 # Use JTE extensions to mkisofs to make jigdo files?
 JTE=1
 
 # The working directory to use. MUST be on the same partition as the mirror.
-TDIR=/org/cdbuilder.debian.org/src/deb-cd/tmp/lenny-update/cd-work
+TDIR=/mnt/cd-raid0/deb-cd/tmp/lenny-update/cd-work
 
 # Building lenny cd set ...
 CODENAME=lenny
 
 # Path where the images will be written
-OUT=/org/cdbuilder.debian.org/src/deb-cd/tmp/lenny-update/cd-out
+OUT=/mnt/cd-raid0/deb-cd/tmp/lenny-update/cd-out
 
 # Location(s) for the snapshot(s)
 SNAPSHOT='Debian=http://us.cdimage.debian.org/cdimage/snapshot/Debian/ --try-last'
@@ -70,7 +70,7 @@ esac
 # Location of the diff file to use to determine the changes. If you leave
 # this blank, we'll try to determine the changes from the ChangeLog files,
 # which is probably less accurate. 
-DIFF=/home/deb-cd/lists/lenny/r0-r3.diff
+DIFF=/home/debian-cd/lists/lenny/r0-r5.diff
 
 if [ "$TYPE" = "cd" ] ; then
     CDSIZE=610 # megabytes, leaving space for metadata
@@ -194,7 +194,7 @@ make_cd () {
 			-jigdo-map Non-US=$NONUS/ \
 			-jigdo-force-md5 /pool/ \
 			-md5-list $UPD/md5-check \
-			$UPD/CD$CDNUM 2>&1 # | grep "extents written"
+			$UPD/CD$CDNUM 2>&1 | grep "extents written"
 		$BASEDIR/tools/jigdo_cleanup \
 			$OUT/$THISARCH/jigdo-$TYPE/debian-update-$VER-$THISARCH-$TYPEUP-$THISNUM.jigdo \
 			debian-update-$VER-$THISARCH-$TYPEUP-$THISNUM.iso \
@@ -251,9 +251,9 @@ do
 	MIRROR=$MIRROR_NORM
 
 	rm -f $UPD/md5-check
-	$GRAB_MD5 $MIRROR $THISARCH $CODENAME $CODENAME $UPD/md5-check
+	$GRAB_MD5 $MIRROR "$ARCHLIST" $CODENAME $CODENAME $UPD/md5-check
 	if [ "$NONUS"x != ""x ] ; then
-		$GRAB_MD5 $NONUS $THISARCH $CODENAME $CODENAME $UPD/md5-check
+		$GRAB_MD5 $NONUS "$ARCHLIST" $CODENAME $CODENAME $UPD/md5-check
 	fi
 
 	for file in `cat $UPD/list`
