@@ -6,6 +6,7 @@
 
 use strict;
 use Digest::MD5;
+use Digest::SHA;
 use File::stat;
 use File::Find;
 use File::Basename;
@@ -20,6 +21,7 @@ my $mkisofs_dirs = "";
 my (@arches, @arches_nosrc, @overflowlist, @pkgs_added);
 my (@exclude_packages, @unexclude_packages, @excluded_package_list);
 my %firmware_package;
+my $current_checksum_type = "";
 
 undef @pkgs_added;
 undef @exclude_packages;
@@ -115,6 +117,7 @@ my $size_check = "";
 # Constants used for space calculations
 my $MiB = 1048576;
 my $MB = 1000000;
+my $GB = 1000000000;
 my $blocksize = 2048;
 my ($maxdiskblocks, $diskdesc);
 my $cddir;
@@ -165,7 +168,7 @@ if ($archlist =~ /m68k/ || $archlist =~ /powerpc/) {
     print LOG "arches require HFS hybrid, multiplying sizes by $hfs_mult and marking $hfs_extra blocks for HFS use\n";
 }
 
-print "Starting to lay out packages into $disktype ($diskdesc) images: $maxdiskblocks 2K-blocks maximum per image\n";
+print "Starting to lay out packages into images:\n";
 
 if (-e "$bdir/firmware-packages") {
     open(FWLIST, "$bdir/firmware-packages") or die "Unable to read firmware-packages file!\n";
@@ -188,9 +191,8 @@ while (defined (my $pkg = <INLIST>)) {
             last;
         }
         print LOG "Starting new disc $disknum at " . `date` . "\n";
-
         start_disc();
-
+        print LOG "  Specified size: $diskdesc, $maxdiskblocks 2K-blocks maximum\n";
         print "  Placing packages into image $disknum\n";
         if ( -e "$bdir/$disknum.mkisofs_opts" ) {
             open(OPTS, "<$bdir/$disknum.mkisofs_opts");
@@ -292,12 +294,20 @@ while (defined (my $pkg = <INLIST>)) {
                 # Put this package first on the next disc
                 push (@overflowlist, $pkg);
             }
-            finish_disc($cddir, "");
-
-            # And reset, to start the next disc
-            $size = 0;
-            $disknum++;
-            undef(@pkgs_added);
+            # Special-case for source-only discs where we don't care
+            # about the ordering. If we're doing a source-only build
+            # and we've overflowed, allow us to carry on down the list
+            # for a while to fill more space. Stop when we've skipped
+            # 5 packages (arbitrary choice of number!) #613751
+            if (!($archlist eq "source") or (scalar @overflowlist >= 5)) {
+                finish_disc($cddir, "");
+                # And reset, to start the next disc
+                $size = 0;
+                $disknum++;
+                undef(@pkgs_added);
+            } else {
+                print LOG "SOURCE DISC: continuing on to see if anything else will fit, " . scalar @overflowlist . " packages on the overflow list at this point\n";
+            }
         } else {
             $pkgs_this_cd++;
             $pkgs_done++;
@@ -491,16 +501,23 @@ sub add_missing_Packages {
 	}
 }
 
-sub md5_file {
+sub checksum_file {
 	my $filename = shift;
-	my ($md5, $st);
+	my $alg = shift;
+	my ($checksum, $st);
 
-	open(MD5FILE, $filename) or die "Can't open '$filename': $!\n";
-	binmode(MD5FILE);
-	$md5 = Digest::MD5->new->addfile(*MD5FILE)->hexdigest;
-	close(MD5FILE);
+	open(CHECKFILE, $filename) or die "Can't open '$filename': $!\n";
+	binmode(CHECKFILE);
+	if ($alg eq "md5") {
+	    $checksum = Digest::MD5->new->addfile(*CHECKFILE)->hexdigest;
+	} elsif ($alg =~ /^sha\d+$/) {
+	    $checksum = Digest::SHA->new($alg)->addfile(*CHECKFILE)->hexdigest;
+	} else {
+	    die "checksum_file: unknown alorithm $alg!\n";
+	}
+	close(CHECKFILE);
 	$st = stat($filename) || die "Stat error on '$filename': $!\n";
-	return ($md5, $st->size);
+	return ($checksum, $st->size);
 }
 
 sub recompress {
@@ -515,24 +532,42 @@ sub recompress {
 	}
 }	
 
-sub md5_files_for_release {
-	my ($md5, $size, $filename);
+sub find_and_checksum_files_for_release {
+	my ($checksum, $size, $filename);
 
 	$filename = $File::Find::name;
 
 	if ($filename =~ m/\/.*\/(Packages|Sources|Release)/o) {
 		$filename =~ s/^\.\///g;
-		($md5, $size) = md5_file($_);
-		printf RELEASE " %s %8d %s\n", $md5, $size, $filename;
+		($checksum, $size) = checksum_file($_, $current_checksum_type);
+		printf RELEASE " %s %8d %s\n", $checksum, $size, $filename;
 	}
 }	
+
+sub checksum_files_for_release {
+    # ICK: no way to pass arguments to the
+    # find_and_checksum_files_for_release() function that I can see,
+    # so using a global here...
+	print RELEASE "MD5Sum:\n";
+	$current_checksum_type = "md5";
+	find (\&find_and_checksum_files_for_release, ".");
+	print RELEASE "SHA1:\n";
+	$current_checksum_type = "sha1";
+	find (\&find_and_checksum_files_for_release, ".");
+	print RELEASE "SHA256:\n";
+	$current_checksum_type = "sha256";
+	find (\&find_and_checksum_files_for_release, ".");
+	print RELEASE "SHA512:\n";
+	$current_checksum_type = "sha512";
+	find (\&find_and_checksum_files_for_release, ".");
+}    
 
 sub md5_files_for_md5sum {
 	my ($md5, $size, $filename);
 
 	$filename = $File::Find::name;
 	if (-f $_) {
-		($md5, $size) = md5_file($_);
+		($md5, $size) = checksum_file($_, "md5");
 		printf MD5LIST "%s  %s\n", $md5, $filename;
 	}
 }
@@ -541,6 +576,8 @@ sub get_disc_size {
     my $hook;
     my $error = 0;
     my $reserved = 0;
+    my $chosen_disk = $disktype;
+    my $disk_size_hack = "";
 
     if (defined($ENV{'RESERVED_BLOCKS_HOOK'})) {
         $hook = $ENV{'RESERVED_BLOCKS_HOOK'};
@@ -553,34 +590,62 @@ sub get_disc_size {
         print "  Reserving $reserved blocks on CD $disknum\n";
     }
 
+    # See if we've been asked to switch sizes for the whole set
+    $disk_size_hack = $ENV{'FORCE_CD_SIZE'} || "";
+    if ($disk_size_hack) {
+       print LOG "HACK HACK HACK: FORCE_CD_SIZE found:\n";
+       print LOG "  forcing use of a $disk_size_hack disk instead of $chosen_disk\n";
+       $chosen_disk = $disk_size_hack;
+    }
+
+    # If we're asked to do a specific size for *this* disknum, over-ride again
+    $disk_size_hack = $ENV{"FORCE_CD_SIZE$disknum"} || "";
+    if ($disk_size_hack) {
+       print LOG "HACK HACK HACK: FORCE_CD_SIZE$disknum found:\n";
+       print LOG "  forcing use of a $disk_size_hack disk instead of $chosen_disk\n";
+       $chosen_disk = $disk_size_hack;
+    }
+
     # Calculate the maximum number of 2K blocks in the output images
-    if ($disktype eq "BC") {
+    if ($chosen_disk eq "BC") {
         $maxdiskblocks = int(680 * $MB / $blocksize) - $reserved;
         $diskdesc = "businesscard";
-    } elsif ($disktype eq "NETINST") {
+    } elsif ($chosen_disk eq "NETINST") {
         $maxdiskblocks = int(680 * $MB / $blocksize) - $reserved;
         $diskdesc = "netinst";
-    } elsif ($disktype =~ /CD$/) {
+    } elsif ($chosen_disk =~ /CD$/) {
         $maxdiskblocks = int(680 * $MB / $blocksize) - $reserved;
         $diskdesc = "650MiB CD";
-    } elsif ($disktype eq "CD700") {
+    } elsif ($chosen_disk eq "CD700") {
         $maxdiskblocks = int(737 * $MB / $blocksize) - $reserved;
         $diskdesc = "700MiB CD";
-    } elsif ($disktype eq "DVD") {
+    } elsif ($chosen_disk eq "DVD") {
         $maxdiskblocks = int(4700 * $MB / $blocksize) - $reserved;
         $diskdesc = "4.7GB DVD";
-    } elsif ($disktype eq "DLDVD") {
+    } elsif ($chosen_disk eq "DLDVD") {
         $maxdiskblocks = int(8500 * $MB / $blocksize) - $reserved;
         $diskdesc = "8.5GB DVD";
-    } elsif ($disktype eq "BD") {
+    } elsif ($chosen_disk eq "BD") {
 		# Useable capacity, found by checking some disks
         $maxdiskblocks = 11230000 - $reserved;
         $diskdesc = "25GB BD";
-    } elsif ($disktype eq "DLBD") {
+    } elsif ($chosen_disk eq "DLBD") {
 		# Useable capacity, found by checking some disks
         $maxdiskblocks = 23652352 - $reserved;
         $diskdesc = "50GB DLBD";
-    } elsif ($disktype eq "CUSTOM") {
+    } elsif ($chosen_disk eq "STICK1GB") {
+        $maxdiskblocks = int(1 * $GB / $blocksize) - $reserved;
+        $diskdesc = "1GB STICK";
+    } elsif ($chosen_disk eq "STICK2GB") {
+        $maxdiskblocks = int(2 * $GB / $blocksize) - $reserved;
+        $diskdesc = "2GB STICK";
+    } elsif ($chosen_disk eq "STICK4GB") {
+        $maxdiskblocks = int(4 * $GB / $blocksize) - $reserved;
+        $diskdesc = "4GB STICK";
+    } elsif ($chosen_disk eq "STICK8GB") {
+        $maxdiskblocks = int(8 * $GB / $blocksize) - $reserved;
+        $diskdesc = "8GB STICK";
+    } elsif ($chosen_disk eq "CUSTOM") {
         $maxdiskblocks = $ENV{'CUSTOMSIZE'}  - $reserved || 
             die "Need to specify a custom size for the CUSTOM disktype\n";
         $diskdesc = "User-supplied size";
@@ -604,6 +669,8 @@ sub start_disc {
 
 	get_disc_size();
 
+    print "Starting new \"$archlist\" $disktype $disknum at $basedir/$codename/CD$disknum\n";
+    print "  Specified size for this image: $diskdesc, $maxdiskblocks 2K-blocks maximum\n";
 	# Grab all the early stuff, apart from dirs that will change later
 	print "  Starting the md5sum.txt file\n";
 	chdir $cddir;
@@ -699,9 +766,8 @@ sub finish_disc {
 	print "  Finishing off the Release file\n";
 	chdir "dists/$codename";
 	open(RELEASE, ">>Release") or die "Failed to open Release file: $!\n";
-	print RELEASE "MD5Sum:\n";
 	find (\&recompress, ".");
-	find (\&md5_files_for_release, ".");
+	checksum_files_for_release();
 	close(RELEASE);
 	chdir("../..");
 

@@ -1,4 +1,4 @@
-debian-cd (3.1.6) UNRELEASED; urgency=low
+debian-cd (3.1.6) UNRELEASED-backport; urgency=low
 
   * Add the missing accent in my family name in Uploaders.
   * Drop Frans Pop from Uploaders, RIP.
@@ -8,6 +8,20 @@ debian-cd (3.1.6) UNRELEASED; urgency=low
     x86. Closes: #612224
   * In the boot prompt for powerpc, make install64 more prominent.
     Closes: #614583
+  * Add support for over-riding disc size on demand, used for some of the
+    squeeze release builds.
+  * Add disk size definitions for 1/2/4/8 GB USB sticks.
+  * Extend the size-override code to allow to override an individual disc
+    in the set (e.g. to make the first DVD fit on a 4GB USB
+    stick). Closes: #612074
+  * Special-case builds of source-only discs: if we think we've
+    overflowed the disc size, try to carry on for a few more packages
+    to get closer to actually filling the disc. Closes: #613751.
+  * Add more checksum types to generated Release files; go from md5 only
+    to md5, sha1, sha256 and sha512.
+  * tools/start_new_disc: tone down messages about missing
+    {BASE,UDEB}_{INCLUDE,EXCLUDE} files from ERROR to WARNING.
+    Closes: #615043
 
  -- Raphaël Hertzog <hertzog@debian.org>  Fri, 04 Feb 2011 09:59:21 +0100
 
