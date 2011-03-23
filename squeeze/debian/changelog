@@ -22,6 +22,8 @@ debian-cd (3.1.6) UNRELEASED-backport; urgency=low
   * tools/start_new_disc: tone down messages about missing
     {BASE,UDEB}_{INCLUDE,EXCLUDE} files from ERROR to WARNING.
     Closes: #615043
+  * Update make_disc_trees.pl and which_deb to cope with different
+    types of source file, and clean up the code in that area.
 
  -- Raphaël Hertzog <hertzog@debian.org>  Fri, 04 Feb 2011 09:59:21 +0100
 
