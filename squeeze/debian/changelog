@@ -24,6 +24,8 @@ debian-cd (3.1.6) UNRELEASED-backport; urgency=low
     Closes: #615043
   * Update make_disc_trees.pl and which_deb to cope with different
     types of source file, and clean up the code in that area.
+  * tools/make_image: generate list files while we have the CD trees
+    available
 
  -- Raphaël Hertzog <hertzog@debian.org>  Fri, 04 Feb 2011 09:59:21 +0100
 
