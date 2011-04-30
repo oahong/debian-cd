@@ -27,6 +27,9 @@ debian-cd (3.1.6) UNRELEASED-backport; urgency=low
   * tools/make_image: generate list files while we have the CD trees
     available
   * Add btrfs-tools on required packages by installer. Closes: #612007.
+  * Add linux-image-2.6-686-bigmem to tasks/<release>/interesting-fromcd23
+    to try and put that on i386 image sets before linux-image-amd64.
+    Closes: #622622
 
  -- Raphaël Hertzog <hertzog@debian.org>  Fri, 04 Feb 2011 09:59:21 +0100
 
