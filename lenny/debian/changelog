@@ -14,6 +14,10 @@ debian-cd (3.1.1lenny1) UNRELEASED; urgency=low
 
   [ Backports from trunk ]
   * New version of tools/grab_md5 to cope with new Packages.gz files layout
+  * tools/make-firmware-image: Rather than use the firmware task which
+    gets out of date, look for firmware/microcode files directly in the
+    Packages file. Check for things installing in /lib/firmware, and add
+    those packages.
 
  -- Frans Pop <fjp@debian.org>  Sat, 13 Jun 2009 16:48:51 +0200
 
