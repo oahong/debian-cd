@@ -35,6 +35,9 @@ debian-cd (3.1.6) UNRELEASED-backport; urgency=low
     gets out of date, look for firmware/microcode files directly in the
     Packages file. Check for things installing in /lib/firmware, and add
     those packages.
+  * Remove the checked-in firmware task altogether, as it's not
+    useful. Generate it when needed using the new script
+    tools/generate_firmware_task.
 
  -- Raphaël Hertzog <hertzog@debian.org>  Fri, 04 Feb 2011 09:59:21 +0100
 

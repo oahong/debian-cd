@@ -133,8 +133,6 @@ ifneq ($(ARCHES),source)
 	$(Q)mkdir -p $(TASKDIR)
 	$(Q)echo "- copying task files from 'tasks/$(DI_CODENAME)/'"
 	$(Q)cp -r $(BASEDIR)/tasks/$(CODENAME)/* $(TASKDIR)
-	$(Q)echo "- copying firwmare task file from 'tasks/firmware'"
-	$(Q)cp -r $(BASEDIR)/tasks/firmware $(TASKDIR)
 	$(Q)echo "- task.languages: using 'tasks/$(DI_CODENAME)/$(TASK_LANGLIST)'"
 	$(Q)cp $(BASEDIR)/tasks/$(DI_CODENAME)/$(TASK_LANGLIST) \
 		$(TASKDIR)/task.languages
@@ -143,6 +141,10 @@ ifneq ($(ARCHES),source)
 		$(BASEDIR)/tools/update_tasks; \
 		$(BASEDIR)/tools/generate_di_list; \
 		$(BASEDIR)/tools/generate_di+k_list
+ifeq ($(FORCE_FIRMWARE),1)
+       # Generate firmware task file using the contents of the archive
+       $(Q)$(BASEDIR)/tools/generate_firmware_task $(ARCHES) $(TASKDIR)/firmware
+endif
 endif
 $(BDIR)/DATE:
 	$(Q)date '+%Y%m%d' > $(BDIR)/DATE
@@ -326,7 +328,7 @@ $(BDIR)/rawlist:
 	for VARIANT in $(VARIANTS); do \
 		VARIANTDEFS="$$VARIANTDEFS -D VARIANT_$$VARIANT"; \
 	done; \
-	if [ "$(FORCE_FIRMWARE)"x != "0"x ] ; then \
+	if [ "$(FORCE_FIRMWARE)"x = "1"x ] ; then \
 		ARCHDEFS="$$ARCHDEFS -DFORCE_FIRMWARE"; \
 	fi; \
 	if [ "$(EXCLUDE_486_KERNEL)"x = "1"x ] ; then \
