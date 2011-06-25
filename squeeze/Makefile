@@ -142,8 +142,8 @@ ifneq ($(ARCHES),source)
 		$(BASEDIR)/tools/generate_di_list; \
 		$(BASEDIR)/tools/generate_di+k_list
 ifeq ($(FORCE_FIRMWARE),1)
-       # Generate firmware task file using the contents of the archive
-       $(Q)$(BASEDIR)/tools/generate_firmware_task "$(ARCHES)" $(TASKDIR)/firmware
+	# Generate firmware task file using the contents of the archive
+	$(Q)$(BASEDIR)/tools/generate_firmware_task "$(ARCHES)" $(TASKDIR)/firmware
 endif
 endif
 $(BDIR)/DATE:
