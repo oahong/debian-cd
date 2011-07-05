@@ -38,6 +38,17 @@ debian-cd (3.1.6) UNRELEASED-backport; urgency=low
   * Remove the checked-in firmware task altogether, as it's not
     useful. Generate it when needed using the new script
     tools/generate_firmware_task.
+    + Remove the old non-US stuff from it, it's not been needed in years.
+    + Cope with .bz2 source files too.
+  * Multiple update-cd changes:
+    + Merged and simplified the old functionality from scansources.old
+      and scanpackages.old into the new script create_control.
+    + Run the mkisofs step *outside* of "set -e" so that we can actually
+      report errors instead of silently failing.
+    + Split out the code for starting a new disc into a function.
+    + Pick up on a potential bug: if we finish the last (expected) disc with
+      a backed-out file, make sure we create another image to include that
+      file too.
 
  -- Raphaël Hertzog <hertzog@debian.org>  Fri, 04 Feb 2011 09:59:21 +0100
 
