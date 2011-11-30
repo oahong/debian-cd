@@ -50,6 +50,9 @@ debian-cd (3.1.6) UNRELEASED-backport; urgency=low
     + Pick up on a potential bug: if we finish the last (expected) disc with
       a backed-out file, make sure we create another image to include that
       file too.
+  * Add an extra tweaked version of d390.ins for s390 booting. The
+    Hardware Management Console needs the file to be in the root
+    directory.
 
  -- Raphaël Hertzog <hertzog@debian.org>  Fri, 04 Feb 2011 09:59:21 +0100
 
