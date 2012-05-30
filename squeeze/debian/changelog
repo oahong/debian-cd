@@ -53,6 +53,8 @@ debian-cd (3.1.6) UNRELEASED-backport; urgency=low
   * Add an extra tweaked version of d390.ins for s390 booting. The
     Hardware Management Console needs the file to be in the root
     directory.
+  * Describe discs appropriately depending on the kernel used.
+    Closes: #673975
 
  -- Raphaël Hertzog <hertzog@debian.org>  Fri, 04 Feb 2011 09:59:21 +0100
 
