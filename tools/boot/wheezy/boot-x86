@@ -195,6 +195,43 @@ fi
 echo $SYSLINUXDEB >> $CDDIR/../$N.pkgs_extracted
 find_pkg_file syslinux source >> $CDDIR/../$N.pkgs_extracted
 
+if [ "$ARCH" = amd64 ]; then
+    mkdir -p $CDDIR/../grub-efi
+    GRUB_EFI_DEB=$(find_pkg_file grub-efi-amd64-bin)
+    if [ -z "$GRUB_EFI_DEB" ]; then
+	    echo "ERROR: grub-efi-amd64-bin package is required" >&2
+	    exit 1
+    fi
+    (dpkg --fsys-tarfile "$MIRROR/$GRUB_EFI_DEB" | \
+	    tar xf - -C $CDDIR/../grub-efi)
+
+    GRUB_COMMON_DEB=$(find_pkg_file grub-common)
+    if [ -z "$GRUB_COMMON_DEB" ]; then
+	    echo "ERROR: grub-common package is required" >&2
+	    exit 1
+    fi
+    (dpkg --fsys-tarfile "$MIRROR/$GRUB_COMMON_DEB" | \
+	    tar xf - -C $CDDIR/../grub-efi)
+
+    # We're including bits from the grub-efi-amd64-bin package
+    echo $GRUB_EFI_DEB >> $CDDIR/../$N.pkgs_extracted
+    find_pkg_file grub-efi-amd64-bin source >> $CDDIR/../$N.pkgs_extracted
+
+    # But *not* from grub-common, we're just using grub-mkimage in the build
+
+    # Create a bootable EFI GRUB image
+    $BASEDIR/tools/efi-image $CDDIR/../efi-tmp x86_64-efi x64 $CDDIR/../grub-efi
+
+    # Now move the GRUB files to the right place.
+    mkdir -p $CDDIR/efi/boot
+    mcopy -i $CDDIR/../efi-tmp/efi.img ::efi/boot/bootx64.efi $CDDIR/efi/boot/bootx64.efi
+    mkdir -p $CDDIR/boot/grub
+    cp -a $CDDIR/../efi-tmp/boot/grub/* $CDDIR/boot/grub/
+    cp -a $CDDIR/../grub-efi/usr/share/grub/*pf2 $CDDIR/boot/grub
+    cp -a $BASEDIR/data/wheezy/grub.cfg $CDDIR/boot/grub
+    sed -i '/^menuentry/Q' $CDDIR/boot/grub/grub.cfg
+fi
+
 add_mkisofs_opt $CDDIR/../$N.mkisofs_opts "-J -joliet-long"
 add_mkisofs_opt $CDDIR/../$N.mkisofs_opts "-cache-inodes"
 add_mkisofs_opt $CDDIR/../$N.mkisofs_opts "-b isolinux/isolinux.bin"

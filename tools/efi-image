@@ -4,13 +4,14 @@ set -e
 # Make an EFI boot image.
 
 if [ -z "$1" ] || [ -z "$2" ]; then
-	echo "usage: $0 OUTPUT-DIRECTORY GRUB-PLATFORM EFI-NAME"
+	echo "usage: $0 OUTPUT-DIRECTORY GRUB-PLATFORM EFI-NAME GRUB-ROOT"
 	exit 1
 fi
 
 outdir="$1"
 platform="$2"
 efi_name="$3"
+grub_root="$4"
 
 memdisk_img=
 workdir=
@@ -36,14 +37,16 @@ source \$prefix/grub.cfg
 EOF
 
 mkdir -p "$outdir/boot/grub/$platform"
-(for i in $(cat /usr/lib/grub/$platform/partmap.lst); do
+(for i in $grub_root/usr/lib/grub/$platform/part_*.mod; do
+    i=`echo $i | sed 's?^.*/??g;s?\.mod$??g;'`
 	echo "insmod $i"
  done; \
  echo "source /boot/grub/grub.cfg") >"$outdir/boot/grub/$platform/grub.cfg"
 
 # Build the core image.
 (cd "$workdir"; tar -cf - boot) >"$memdisk_img"
-grub-mkimage -O "$platform" -m "$memdisk_img" \
+$grub_root/usr/bin/grub-mkimage -O "$platform" -m "$memdisk_img" \
+    -d $grub_root/usr/lib/grub/$platform \
 	-o "$workdir/boot$efi_name.efi" -p '(memdisk)/boot/grub' \
 	search iso9660 configfile normal memdisk tar part_msdos fat
 
@@ -51,15 +54,15 @@ grub-mkimage -O "$platform" -m "$memdisk_img" \
 # headroom seems to be enough; (x+31)/32*32 rounds up to multiple of 32.
 mkfs.msdos -C "$outdir/efi.img" \
 	$(( ($(stat -c %s "$workdir/boot$efi_name.efi") / 1024 + 55) \
-	    / 32 * 32 ))
+	    / 32 * 32 )) 2>/dev/null
 mmd -i "$outdir/efi.img" ::efi
 mmd -i "$outdir/efi.img" ::efi/boot
 mcopy -i "$outdir/efi.img" "$workdir/boot$efi_name.efi" \
 	"::efi/boot/boot$efi_name.efi"
 
 # Copy over GRUB modules, except for those already built in.
-cp -a "/usr/lib/grub/$platform"/*.lst "$outdir/boot/grub/$platform/"
-for x in "/usr/lib/grub/$platform"/*.mod; do
+cp -a "$grub_root/usr/lib/grub/$platform"/*.lst "$outdir/boot/grub/$platform/"
+for x in "$grub_root/usr/lib/grub/$platform"/*.mod; do
 	# TODO: Some of these exclusions are based on knowledge of module
 	# dependencies.  It would be nice to have a way to read the module
 	# list directly out of the image.
