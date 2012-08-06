@@ -54,7 +54,7 @@ $grub_root/usr/bin/grub-mkimage -O "$platform" -m "$memdisk_img" \
 # headroom seems to be enough; (x+31)/32*32 rounds up to multiple of 32.
 mkfs.msdos -C "$outdir/efi.img" \
 	$(( ($(stat -c %s "$workdir/boot$efi_name.efi") / 1024 + 55) \
-	    / 32 * 32 )) 2>/dev/null
+	    / 32 * 32 )) >/dev/null 2>&1
 mmd -i "$outdir/efi.img" ::efi
 mmd -i "$outdir/efi.img" ::efi/boot
 mcopy -i "$outdir/efi.img" "$workdir/boot$efi_name.efi" \
