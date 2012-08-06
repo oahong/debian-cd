@@ -226,10 +226,17 @@ if [ "$ARCH" = amd64 ]; then
     mkdir -p $CDDIR/efi/boot
     mcopy -i $CDDIR/../efi-tmp/efi.img ::efi/boot/bootx64.efi $CDDIR/efi/boot/bootx64.efi
     mkdir -p $CDDIR/boot/grub
+    cp -a $CDDIR/../efi-tmp/efi.img $CDDIR/boot/grub
     cp -a $CDDIR/../efi-tmp/boot/grub/* $CDDIR/boot/grub/
     cp -a $CDDIR/../grub-efi/usr/share/grub/*pf2 $CDDIR/boot/grub
     cp -a $BASEDIR/data/wheezy/grub.cfg $CDDIR/boot/grub
-    sed -i '/^menuentry/Q' $CDDIR/boot/grub/grub.cfg
+    case "$MKISOFS" in
+        *xorriso*)
+            add_mkisofs_opt $CDDIR/../$N.mkisofs_opts "-eltorito-alt-boot --efi-boot boot/grub/efi.img";;
+        *)
+            add_mkisofs_opt $CDDIR/../$N.mkisofs_opts "--eltorito-alt-boot --efi-boot boot/grub/efi.img";;
+    esac
+#    sed -i '/^menuentry/Q' $CDDIR/boot/grub/grub.cfg
 fi
 
 add_mkisofs_opt $CDDIR/../$N.mkisofs_opts "-J -joliet-long"
