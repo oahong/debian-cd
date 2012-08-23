@@ -390,6 +390,7 @@ add_mkisofs_opt $CDDIR/../$N.mkisofs_dirs "boot$N"
 # many i386 EFI machines around, after all...
 if [ "$ARCH" = amd64 ]; then
 
+    echo "  Adding EFI boot code for $ARCH on CD$N"
     # Extract bits from a couple of grub packages that we'll need to
     # use
     mkdir -p $CDDIR/../grub-efi
