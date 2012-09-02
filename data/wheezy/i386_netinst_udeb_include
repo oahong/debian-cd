@@ -1,3 +1,6 @@
 netcfg
 ethdetect
 pcmciautils-udeb
+partman-efi
+libdebian-installer4-udeb
+libdebian-installer-extra4-udeb
