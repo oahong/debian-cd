@@ -385,67 +385,136 @@ add_mkisofs_opt $CDDIR/../$N.mkisofs_opts "-boot-info-table"
 # BIOSes apparently have a limitation on what they'll boot here.
 add_mkisofs_opt $CDDIR/../$N.mkisofs_dirs "boot$N"
 
-# For amd64, add EFI boot options too. Could probably do this for i386
-# as well if desired, but it's not such a priority. There aren't that
-# many i386 EFI machines around, after all...
-if [ "$ARCH" = amd64 ]; then
+echo "  Adding EFI boot code for $ARCH on CD$N"
+# Extract bits from a couple of grub packages that we'll need to
+# use
+mkdir -p $CDDIR/../grub-efi
 
-    echo "  Adding EFI boot code for $ARCH on CD$N"
-    # Extract bits from a couple of grub packages that we'll need to
-    # use
-    mkdir -p $CDDIR/../grub-efi
-    GRUB_EFI_DEB=$(find_pkg_file grub-efi-amd64-bin)
-    if [ -z "$GRUB_EFI_DEB" ]; then
-	    echo "ERROR: grub-efi-amd64-bin package is required" >&2
-	    exit 1
-    fi
-    (dpkg --fsys-tarfile "$MIRROR/$GRUB_EFI_DEB" | \
-	    tar xf - -C $CDDIR/../grub-efi)
+if [ $ARCH = amd64 ] ; then
+    GRUB_EFI_BIN=grub-efi-amd64-bin
+else
+    GRUB_EFI_BIN=grub-efi-ia32-bin
+fi
 
-    GRUB_COMMON_DEB=$(find_pkg_file grub-common)
-    if [ -z "$GRUB_COMMON_DEB" ]; then
-	    echo "ERROR: grub-common package is required" >&2
-	    exit 1
-    fi
-    (dpkg --fsys-tarfile "$MIRROR/$GRUB_COMMON_DEB" | \
-	    tar xf - -C $CDDIR/../grub-efi)
+GRUB_EFI_DEB=$(find_pkg_file $GRUB_EFI_BIN)
+if [ -z "$GRUB_EFI_DEB" ]; then
+	echo "ERROR: $GRUB_EFI_BIN package is required" >&2
+	exit 1
+fi
+(dpkg --fsys-tarfile "$MIRROR/$GRUB_EFI_DEB" | \
+	tar xf - -C $CDDIR/../grub-efi)
 
-    # We're including bits from the grub-efi-amd64-bin package
-    echo $GRUB_EFI_DEB >> $CDDIR/../$N.pkgs_extracted
-    find_pkg_file grub-efi-amd64-bin source >> $CDDIR/../$N.pkgs_extracted
+GRUB_COMMON_DEB=$(find_pkg_file grub-common)
+if [ -z "$GRUB_COMMON_DEB" ]; then
+	echo "ERROR: grub-common package is required" >&2
+	exit 1
+fi
+(dpkg --fsys-tarfile "$MIRROR/$GRUB_COMMON_DEB" | \
+	tar xf - -C $CDDIR/../grub-efi)
 
-    # But *not* from grub-common, we're just using grub-mkimage in the build
+# We're including bits from the grub-efi-$ARCH-bin package
+echo $GRUB_EFI_DEB >> $CDDIR/../$N.pkgs_extracted
+find_pkg_file $GRUB_EFI_BIN source >> $CDDIR/../$N.pkgs_extracted
 
-    # Create a bootable EFI GRUB image that we can use
+# But *not* from grub-common, we're just using grub-mkimage in the build
+
+# Create a bootable EFI GRUB image that we can use
+mkdir -p $CDDIR/efi/boot
+mkdir -p $CDDIR/boot/grub
+if [ $ARCH = amd64 ] ; then
     $BASEDIR/tools/efi-image $CDDIR/../efi-tmp x86_64-efi x64 $CDDIR/../grub-efi
-
-    # Now move the GRUB files to the right place in the CD image
-    mkdir -p $CDDIR/efi/boot
     mcopy -i $CDDIR/../efi-tmp/efi.img ::efi/boot/bootx64.efi $CDDIR/efi/boot/bootx64.efi
-    mkdir -p $CDDIR/boot/grub
-    cp -a $CDDIR/../efi-tmp/efi.img $CDDIR/boot/grub
-    cp -a $CDDIR/../efi-tmp/boot/grub/* $CDDIR/boot/grub/
-    cp -a $CDDIR/../grub-efi/usr/share/grub/*pf2 $CDDIR/boot/grub
+else
+    $BASEDIR/tools/efi-image $CDDIR/../efi-tmp i386-efi ia32 $CDDIR/../grub-efi
+    mcopy -i $CDDIR/../efi-tmp/efi.img ::efi/boot/bootia32.efi $CDDIR/efi/boot/bootia32.efi
+fi
+
+# Now move the GRUB files to the right place in the CD image
+cp -a $CDDIR/../efi-tmp/efi.img $CDDIR/boot/grub
+cp -a $CDDIR/../efi-tmp/boot/grub/* $CDDIR/boot/grub/
+cp -a $CDDIR/../grub-efi/usr/share/grub/*pf2 $CDDIR/boot/grub
+if [ ! -f $CDDIR/boot/grub/grub.cfg ] ; then
     cp -a $BASEDIR/data/wheezy/grub.cfg $CDDIR/boot/grub
-    # TODO: generate the grub menu entries, or grab pre-made ones from a d-i build
+fi
 
-    case "$MKISOFS" in
-        *xorriso*)
+# Temporary hack - generate grub.cfg entries
+add_grub_entry () {
+    FILE=$1
+    DESC=$2
+    OPTS=$3
+    GFX=$4
+    PAD="                                   "
 
-            # Tell xorriso to create a secondary ElTorito boot record
-            # for the EFI bootloader
-            add_mkisofs_opt $CDDIR/../$N.mkisofs_opts "-eltorito-alt-boot --efi-boot boot/grub/efi.img"
+    echo "menuentry \"${PAD}${DESC}\" {" >> $FILE
+    echo "        set gfxpayload=keep" >> $FILE
+    echo "        linux   /$INSTALLDIR/vmlinuz ${OPTS} --" >> $FILE
+    if [ $GFX = 1 ] ; then
+        echo "        initrd  /$INSTALLDIR/gtk/initrd.gz" >> $FILE
+    else
+        echo "        initrd  /$INSTALLDIR/initrd.gz" >> $FILE
+    fi
+    echo "}" >> $FILE
+}
 
-            # Add the efi image as a FAT partition too, so our CD
-            # image will also boot on a USB key (like isohybrid, just
-            # implemented differently)
-            add_mkisofs_opt $CDDIR/../$N.mkisofs_opts "-append_partition 2 0x01 $CDDIR/../efi-tmp/efi.img"
-            ;;
+# TODO: generate the grub menu entries, or grab pre-made ones from a d-i build
+if [ $ARCH = amd64 ] ; then
+    add_grub_entry $CDDIR/boot/grub/grub.cfg \
+        "Debian 7.0 graphical installer (64-bit, EFI)" \
+        "pci=nocrs verbose" 1
+    add_grub_entry $CDDIR/boot/grub/grub.cfg \
+        "Debian 7.0 text-mode installer (64-bit, EFI)" \
+        "pci=nocrs verbose" 0
+    add_grub_entry $CDDIR/boot/grub/grub.cfg \
+        "Debian 7.0 text-mode rescue (64-bit, EFI)" \
+        "pci=nocrs verbose rescue/enable=true" 0
+else
+    add_grub_entry $CDDIR/boot/grub/grub.cfg \
+        "Debian 7.0 graphical installer (32-bit, EFI)" \
+        "pci=nocrs verbose" 1
+    add_grub_entry $CDDIR/boot/grub/grub.cfg \
+        "Debian 7.0 text-mode installer (32-bit, EFI)" \
+        "pci=nocrs verbose" 0
+    add_grub_entry $CDDIR/boot/grub/grub.cfg \
+        "Debian 7.0 text-mode rescue (32-bit, EFI)" \
+        "pci=nocrs verbose rescue/enable=true" 0
+fi
 
-        *)
-            add_mkisofs_opt $CDDIR/../$N.mkisofs_opts "--eltorito-alt-boot --efi-boot boot/grub/efi.img"
-            ;;
-    esac
-fi # if ARCH == amd64
+# Stuff the EFI boot files into a FAT filesystem, making it as small
+# as possible.  24KiB headroom seems to be enough; (x+31)/32*32 rounds
+# up to multiple of 32.
+# This is the same as in efi-image, but we need to redo it here in the
+# case of a multi-arch amd64/i386 image
+
+size=0
+for file in $CDDIR/efi/boot/boot*.efi; do
+    size=$(($size + $(stat -c %s "$file")))
+done
+
+blocks=$((($size / 1024 + 55) / 32 * 32 ))
+
+rm -f $CDDIR/boot/grub/efi.img
+mkfs.msdos -C "$CDDIR/boot/grub/efi.img" $blocks >/dev/null
+mmd -i "$CDDIR/boot/grub/efi.img" ::efi
+mmd -i "$CDDIR/boot/grub/efi.img" ::efi/boot
+mcopy -i "$CDDIR/boot/grub/efi.img" $CDDIR/efi/boot/boot*.efi \
+    "::efi/boot"
+
+case "$MKISOFS" in
+    *xorriso*)
+        # Tell xorriso to create a secondary ElTorito boot record for
+        # the EFI bootloader
+        add_mkisofs_opt $CDDIR/../$N.mkisofs_opts "-eltorito-alt-boot --efi-boot boot/grub/efi.img"
+
+        # Add the efi image as a FAT partition too, so our CD image
+        # will also boot on a USB key (like isohybrid, just
+        # implemented differently)
+        add_mkisofs_opt $CDDIR/../$N.mkisofs_opts "-append_partition 2 0x01 $CDDIR/boot/grub/efi.img"
+        ;;
+
+    *)
+        add_mkisofs_opt $CDDIR/../$N.mkisofs_opts "--eltorito-alt-boot --efi-boot boot/grub/efi.img"
+        ;;
+esac
 
 # th,th, thats all
+
