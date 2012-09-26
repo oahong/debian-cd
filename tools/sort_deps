@@ -38,20 +38,6 @@ my $tasks_packages = read_env('TASKS_PACKAGES',
                               "$ENV{'MIRROR'}/dists/sid/main/binary-$ENV{'ARCH'}/Packages.gz");
 my @output = ();
 
-# Borrowed from the internals of apt. Ewwww.
-# enum DepCompareOp {Or=0x10,NoOp=0,LessEq=0x1,GreaterEq=0x2,Less=0x3,
-#				   Greater=0x4,Equals=0x5,NotEquals=0x6};
-my $DEPCOMPARE_OR   = 16;
-my $DEPCOMPARE_NOP  = 0;
-my $DEPCOMPARE_LE   = 1;
-my $DEPCOMPARE_GE   = 2;
-my $DEPCOMPARE_LT   = 3;
-my $DEPCOMPARE_GT   = 4;
-my $DEPCOMPARE_EQ   = 5;
-my $DEPCOMPARE_NE   = 6;
-
-my @DEPCOMPARE_TEXT = ("", "<=", ">=", "<<", ">>", "=", "!=");
-
 $| = 1; # Autoflush for debugging
 
 open(LOG, ">$dir/sort_deps.$arch.log")
@@ -392,18 +378,16 @@ sub dump_depend {
         foreach (@array) {
             %d = %$_;
             $ret .= $d{"Package"};
-            if ($d{"CmpOp"} > $DEPCOMPARE_NOP && 
-                $d{"CmpOp"} <= $DEPCOMPARE_NE) {
-                $ret .= " (" . $DEPCOMPARE_TEXT[$d{"CmpOp"}] . " " . $d{"Version"} . ")";
+            if ($d{"CmpOp"} ne "") {
+                $ret .= " (" . $d{"CmpOp"} . " " . $d{"Version"} . ")";
             }
             $ret .= " ";
         }
     } elsif ("HASH" eq ref($tmpin)) {
         %d = %$tmpin;
         $ret .= $d{"Package"};
-        if ($d{"CmpOp"} > $DEPCOMPARE_NOP && 
-            $d{"CmpOp"} <= $DEPCOMPARE_NE) {
-            $ret .= " (" . $DEPCOMPARE_TEXT[$d{"CmpOp"}] . " " . $d{"Version"} . ")";
+        if ($d{"CmpOp"} ne "") {
+            $ret .= " (" . $d{"CmpOp"} . " " . $d{"Version"} . ")";
         }
     } else {
         die "dump_depend: $tmpin is neither an array nor a hash!\n";
@@ -451,14 +435,14 @@ sub read_depends {
 				msg(1, "    " . dump_depend($t) . " <virt>\n");
 			}
 			push @{$packages{$pkg}{$out_type}}, $elt;
-		} elsif ($lines->[$$i] =~ m/^\s\s$type: (\S+)( \((\d+) (\S+)\))*/) {
+		} elsif ($lines->[$$i] =~ m/^\s\s$type: (\S+)( \((\S+) (\S+)\))*/) {
 			my %elt;
 			$elt{"Package"} = $1;
 			if (defined $2) {
-				$elt{"CmpOp"} = $3 & 15;
+				$elt{"CmpOp"} = $3;
 				$elt{"Version"} = $4;
 			} else {
-				$elt{"CmpOp"} = $DEPCOMPARE_NOP;
+				$elt{"CmpOp"} = "";
 				$elt{"Version"} = "";
 			}
 			msg(1, "    " . dump_depend(\%elt) . "\n");
@@ -468,13 +452,13 @@ sub read_depends {
 			# Special case for packages providing not
 			# truly virtual packages
 			if ($lines->[$$i] =~ m/^\s{4}/) {
-				while ($lines->[$$i] =~ m/\s{4}(\S+)( \((\d+) (\S+)\))*/) {
+				while ($lines->[$$i] =~ m/\s{4}(\S+)( \((\S+) (\S+)\))*/) {
 					$elt{"Package"} = $1;
 					if (defined $2) {
-						$elt{"CmpOp"} = $3 & 15;
+						$elt{"CmpOp"} = $3;
 						$elt{"Version"} = $4;
 					} else {
-						$elt{"CmpOp"} = $DEPCOMPARE_NOP;
+						$elt{"CmpOp"} = "";
 						$elt{"Version"} = "";
 					}
 					msg(1, "    " . dump_depend(\%elt) . "\n");
@@ -500,34 +484,37 @@ sub check_versions {
 
 	# Trivial check - if we don't care about versioning, anything will
 	# do!
-	if ($op == $DEPCOMPARE_NOP) {
+	if ($op eq "") {
 		return 1;
 	}
 
 	# Ask the dpkg perl code to compare the version strings
 	my $comp = version_compare($available, $wanted);
 
-	if ($op == $DEPCOMPARE_LE) {
+	if ($op eq "<=") {
 		if ($comp == -1 || $comp == 0) {
 			return 1;
 		}
-	} elsif ($op == $DEPCOMPARE_GE) {
+	} elsif ($op eq ">=") {
 		if ($comp == 0 || $comp == 1) {
 			return 1;
 		}
-	} elsif ($op == $DEPCOMPARE_LT) {
+	} elsif ($op eq "<<") {
 		if ($comp == -1) {
 			return 1;
 		}
-	} elsif ($op == $DEPCOMPARE_GT) {
+	} elsif ($op eq ">>") {
 		if ($comp == 1) {
 			return 1;
 		}
-	} elsif ($op == $DEPCOMPARE_EQ) {
+	} elsif ($op eq "=") {
 		if ($comp == 0) {
 			return 1;
 		}
-	} elsif ($op == $DEPCOMPARE_NE) {
+	# Not sure this ("!") actually exists!
+	# Mentioned in apt sources, but not in debian policy
+	# No harm done by checking for it, though...
+	} elsif ($op eq "!") {
 		if ($comp == -1 || $comp == 1) {
 			return 1;
 		}
@@ -583,13 +570,13 @@ sub read_ordepends {
 	chomp $lines->[$$i];
 	
 	while ($lines->[$$i] 
-	            =~ m/^\s([\s\|])((?:Pre)?Depends|Suggests|Recommends): (\S+)( \((\d+) (\S+)\))*/) {
+	            =~ m/^\s([\s\|])((?:Pre)?Depends|Suggests|Recommends): (\S+)( \((\S+) (\S+)\))*/) {
 		$val = $3;
 		if (defined $4) {
-			$op = $5 & 15;
+			$op = $5;
 			$version = $6;
 		} else {
-			$op = $DEPCOMPARE_NOP;
+			$op = "";
 			$version = "";
 		}
 		$last = 1 if $1 ne '|'; #Stop when no more '|'
@@ -609,13 +596,13 @@ sub read_ordepends {
 			$$i++;
 			# Hack for packages providing not a truly
 			# virtual package
-			while ($lines->[$$i] =~ m/^\s{4}(\S+)( \((\d+) (\S+)\))*/) {
+			while ($lines->[$$i] =~ m/^\s{4}(\S+)( \((\S+) (\S+)\))*/) {
 				$elt{"Package"} = $1;
 				if (defined $2) {
-					$elt{"CmpOp"} = $3 & 15;
+					$elt{"CmpOp"} = $3;
 					$elt{"Version"} = $4;
 				} else {
-					$elt{"CmpOp"} = $DEPCOMPARE_NOP;
+					$elt{"CmpOp"} = "";
 					$elt{"Version"} = "";
 				}
 				push @or, \%elt;
@@ -640,14 +627,14 @@ sub read_virtualdepends {
 	    $$i++
 	}
 	# Now look at the alternatives on the following lines
-	while ($lines->[$$i] =~ m/^\s{4}(\S+)( \((\d+) (\S+)\))*/) {
+	while ($lines->[$$i] =~ m/^\s{4}(\S+)( \((\S+) (\S+)\))*/) {
 		my %elt;
 		$elt{"Package"} = $1;
 		if (defined $2) {
-			$elt{"CmpOp"} = $3 & 15;
+			$elt{"CmpOp"} = $3;
 			$elt{"Version"} = $4;
 		} else {
-			$elt{"CmpOp"} = $DEPCOMPARE_NOP;
+			$elt{"CmpOp"} = "";
 			$elt{"Version"} = "";
 		}
 		push @or, \%elt;
@@ -658,7 +645,7 @@ sub read_virtualdepends {
 	} else {
 		my %elt;
 		$elt{"Package"} = $virtual;
-		$elt{"CmpOp"} = $DEPCOMPARE_NOP;
+		$elt{"CmpOp"} = "";
 		$elt{"Version"} = "";
 		push @or, \%elt;
 		return \@or;
@@ -784,7 +771,7 @@ sub get_missing {
 	my $dep_text;
 	
 	$t{"Package"} = $p;
-	$t{"CmpOp"} = $DEPCOMPARE_NOP;
+	$t{"CmpOp"} = "";
 	$t{"Version"} = "";
 
 	if (not add_missing (\@deps_list, $packages{$p}{"Depends"}, \%t, 0, \@parents)) {
