@@ -60,6 +60,7 @@ debian-cd (3.1.6) UNRELEASED-backport; urgency=low
   * Explicitly add s390-tools and sysconfig-hardware for s390.
   * Make grab_md5 more robust
   * Remove -e bashisms from Makefile
+  * Merge version-tracking sort_deps code from current trunk (r2448)
 
  -- Raphaël Hertzog <hertzog@debian.org>  Fri, 04 Feb 2011 09:59:21 +0100
 
