@@ -21,7 +21,7 @@ MIRROR_AMD64=/org/cdbuilder.debian.org/src/ftp/debian-amd64/debian
 NONFREE=0
 
 # What release version is this?
-VER=6.0.5
+VER=6.0.6
 
 # Is this an official CD?
 OFFICIAL=Official
