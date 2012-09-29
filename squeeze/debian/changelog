@@ -59,6 +59,7 @@ debian-cd (3.1.6) UNRELEASED-backport; urgency=low
     (loading from a CD/DVD used over the network). Closes: Bug #673576
   * Explicitly add s390-tools and sysconfig-hardware for s390.
   * Make grab_md5 more robust
+  * Remove -e bashisms from Makefile
 
  -- Raphaël Hertzog <hertzog@debian.org>  Fri, 04 Feb 2011 09:59:21 +0100
 
