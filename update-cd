@@ -21,7 +21,7 @@ MIRROR_AMD64=/org/cdbuilder.debian.org/src/ftp/debian-amd64/debian
 NONFREE=0
 
 # What release version is this?
-VER=6.0.2.1
+VER=7.1.0
 
 # Is this an official CD?
 OFFICIAL=Official
@@ -34,13 +34,13 @@ MKISOFS="$PWD/../genisoimage -jigdo-template-compress bzip2 -r -checksum_algorit
 JTE=1
 
 # The working directory to use. MUST be on the same partition as the mirror.
-TDIR=/org/cdbuilder.debian.org/src/deb-cd/tmp/squeeze-update/cd-work
+TDIR=/org/cdbuilder.debian.org/src/deb-cd/tmp/wheezy-update/cd-work
 
-# Building squeeze cd set ...
-CODENAME=squeeze
+# Building wheezy cd set ...
+CODENAME=wheezy
 
 # Path where the images will be written
-OUT=/org/cdbuilder.debian.org/src/deb-cd/tmp/squeeze-update/cd-out
+OUT=/org/cdbuilder.debian.org/src/deb-cd/tmp/wheezy-update/cd-out
 
 # Location(s) for the snapshot(s)
 SNAPSHOT='Debian=http://us.cdimage.debian.org/cdimage/snapshot/Debian/ --try-last'
@@ -66,7 +66,7 @@ esac
 # Location of the diff file to use to determine the changes. If you leave
 # this blank, we'll try to determine the changes from the ChangeLog files,
 # which is probably less accurate. 
-DIFF=/home/debian-cd/lists/squeeze/r0-r2.diff
+DIFF=/home/debian-cd/lists/wheezy/r0-r1.diff
 
 if [ "$TYPE" = "cd" ] ; then
     CDSIZE=644 # megabytes, leaving space for metadata
