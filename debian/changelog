@@ -1,3 +1,12 @@
+debian-cd (3.1.13-deb7u1) UNRELEASED; urgency=low
+
+  * Fixes and changes backported from master for the wheezy build branch:
+    + Make sure that when we call apt, we tell it to *not* use localised
+      package descriptions; this causes issues during build. See #712435 in
+      apt.
+
+ -- Steve McIntyre <93sam@debian.org>  Mon, 17 June 2013 15:44:32 +0100
+
 debian-cd (3.1.13) unstable; urgency=medium
 
   * The traditional "last upload before the stable release" upload...
