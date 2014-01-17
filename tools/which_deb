@@ -8,6 +8,17 @@
 use strict;
 use List::Util qw{first};
 
+sub read_env {
+    my $env_var = shift;
+    my $default = shift;
+
+    if (exists($ENV{$env_var})) {
+        return $ENV{$env_var};
+    }
+    # else
+    return $default;
+}
+
 my ($mirror, $codename, $pkg, $pth, $output, $text_out);
 
 $mirror = shift;
@@ -17,6 +28,7 @@ $output = shift;
 $pth = "$mirror/dists/$codename";
 $text_out = "";
 
+my $httpmirror = read_env('HTTPMIRROR', "");
 my @components = qw(main);
 push @components, 'contrib' if $ENV{CONTRIB};
 push @components, 'non-free' if $ENV{NONFREE};
@@ -39,15 +51,29 @@ if ( $ENV{ARCHES} ) {
 if (!@ARCHES) {
         my %found_arches;
         my $dh;
+
+	# See what arches we have in the local mirror
         for my $component(@components) {
+	    if (-d "$pth/$component") {
                 opendir ($dh, "$pth/$component");
                 if ($dh) {
-                        while (my $entry = readdir $dh) {
-                                $entry =~ /^binary-(.*)/ and $1 !~ /all/ and $found_arches{$1} = 1;
-                        }
+		    while (my $entry = readdir $dh) {
+			$entry =~ /^binary-(.*)/ and $1 !~ /all/ and $found_arches{$1} = 1;
+		    }
                 }
                 close $dh;
-        }
+	    } else {
+		# Look up via http if we don't have stuff locally
+		if (defined $httpmirror) {
+		    open(HTTPDIR, "wget -q -O- $httpmirror/dists/$codename/$component |")
+			or die "Failed to get directory listing of $httpmirror/dists/$codename/$component: $!\n";
+		    while(my $entry = <HTTPDIR>) {
+			$entry =~ />binary-([-a-z0-9]*)\/</ and $1 !~ /all/ and $found_arches{$1} = 1;
+		    }
+		    close HTTPDIR;
+                }
+	    }
+	}	    
         if ($found_arches{"i386"}) {
                 push @ARCHES, 'i386';
         }
@@ -55,7 +81,9 @@ if (!@ARCHES) {
                 push @ARCHES, 'amd64';
         }
         for my $arch (sort keys %found_arches) {                
+	    if ($arch !~ /^i386$/ and $arch !~ /^amd64$/) {
                 push @ARCHES, $arch;
+	    }
         }
 }
 
@@ -74,6 +102,8 @@ sub grab_bin_info {
         if ( $component eq 'local' and $ENV{LOCALDEBS} ) {
             $pgz = "$ENV{LOCALDEBS}/dists/$codename/local/binary-$arch/Packages.gz";
         }
+
+	system("grab_file", "dists/$codename/$component/binary-$arch/Packages.gz");
         if (-e $pgz) {
             open(PFILE, "zcat $pgz |") or
                 die "Failed to read Packages file $pgz";
@@ -104,6 +134,7 @@ sub grab_src_info {
     for my $component ( @components ) {
         my $pgz = "$pth/$component/source/Sources.gz";
 
+	system("grab_file", "dists/$codename/$component/source/Sources.gz");
         if (-e $pgz) {
             open(PFILE, "zcat $pgz |") or
                 die "Failed to read Sources file $pgz";
