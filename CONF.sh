@@ -111,6 +111,11 @@ fi
 # Paths to the mirrors
 export MIRROR=/srv/mirror/debian
 
+# If you don't have a complete local mirror, specify a URL for a full
+# mirror and things will be downloaded as necessary into the MIRROR
+# path
+export HTTPMIRROR=http://mirror.mossbank.org.uk/debian
+
 # Path of the temporary directory
 export TDIR=/srv/mirror/tmp
 
