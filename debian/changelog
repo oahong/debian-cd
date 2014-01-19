@@ -1,3 +1,11 @@
+debian-cd (3.1.15) UNRELEASED; urgency=medium
+
+  [ Steve McIntyre ]
+  * tools/apt-selection: pass APT::Architectures:: when calling apt;
+    otherwise if we're running on a multi-arch system apt will break
+
+ -- Steve McIntyre <93sam@debian.org>  Tue, 14 Jan 2014 17:19:22 +0100
+
 debian-cd (3.1.14) unstable; urgency=medium
 
   [ Steve McIntyre ]
