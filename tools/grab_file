@@ -29,4 +29,10 @@ fi
 
 DIR=$(dirname "$WANTED")
 mkdir -p "$MIRROR/$DIR"
-wget -o /tmp/log -q "$HTTPMIRROR/$WANTED" -O "$MIRROR/$WANTED"
+wget -o /tmp/log "$HTTPMIRROR/$WANTED" -O "$MIRROR/$WANTED"
+
+# Check that the file is non-zero in size
+if [ -e "$MIRROR/$WANTED" ] && [ ! -s "$MIRROR/$WANTED" ] ; then
+    rm -f "$MIRROR/$WANTED"
+fi
+
