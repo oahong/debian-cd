@@ -5,8 +5,8 @@
 # extra utility script - if a file does not exist in our mirror and
 # we've been told to use an http mirror, go grab it from there
 #
-# Takes 1 parameters: the the full path to the file (relative to the
-# base dir of the mirror)
+# Takes <n> parameters: the full path to the files required (relative
+# to the base dir of the mirror)
 #
 # The MIRROR env var must be set
 # If we want to be able to download, HTTPMIRROR mus be set too
@@ -14,25 +14,21 @@
 set -e
 #set -x
 
-WANTED=$1
-
 if [ "$MIRROR"x = ""x ] ; then
     echo $0: MIRROR not set
     exit 1
 fi
 
-if [ -e "$MIRROR/$WANTED" ] ; then
-    exit 0
-fi
+for WANTED in $@; do
 
-# else
+    if [ ! -e "$MIRROR/$WANTED" ] ; then
+	DIR=$(dirname "$WANTED")
+	mkdir -p "$MIRROR/$DIR"
+	wget -o /tmp/log "$HTTPMIRROR/$WANTED" -O "$MIRROR/$WANTED"
 
-DIR=$(dirname "$WANTED")
-mkdir -p "$MIRROR/$DIR"
-wget -o /tmp/log "$HTTPMIRROR/$WANTED" -O "$MIRROR/$WANTED"
-
-# Check that the file is non-zero in size
-if [ -e "$MIRROR/$WANTED" ] && [ ! -s "$MIRROR/$WANTED" ] ; then
-    rm -f "$MIRROR/$WANTED"
-fi
-
+        # Check that the file is non-zero in size
+	if [ -e "$MIRROR/$WANTED" ] && [ ! -s "$MIRROR/$WANTED" ] ; then
+	    rm -f "$MIRROR/$WANTED"
+	fi
+    fi
+done
