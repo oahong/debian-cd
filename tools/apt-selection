@@ -98,6 +98,13 @@ temp=$APTTMP/$CODENAME-$ARCH/temp.apt-selection
 
 # Launch the command
 if [ "$1" = "update" ] || [ "$1" = "check" ]; then
+	for section in $sections; do
+		if [ $ARCH = "source" ] ; then
+			grab_file dists/$CODENAME/$section/source/Sources.gz
+		else
+			grab_file dists/$CODENAME/$section/binary-$ARCH/Packages.gz
+		fi
+	done
 	apt-get $options $@
 	exit $?
 elif [ "$1" = "cache" ]; then
