@@ -17,6 +17,8 @@ if (! defined($mirror)) {
     die "update_tasks: mirror not specified\n";
 }
 
+my $httpmirror = $ENV{'HTTPMIRROR'};
+
 my $bdir = $ENV{'BDIR'};
 if (! defined($bdir)) {
     die "update_tasks: temp dir not specified\n";
@@ -47,6 +49,8 @@ my $default_desktop;
 # Find the dependency information of the task-desktop deb to see what
 # the default desktop should be
 my $task_desktop_deb = `$basedir/tools/which_deb $mirror $codename task-desktop binary`;
+chomp $task_desktop_deb;
+system("grab_file", $task_desktop_deb);
 open (TASKS, "dpkg --info $mirror/$task_desktop_deb |") or
     die "update_tasks: Can't run dpkg --info $mirror/$task_desktop_deb; $!\n";
 while (<TASKS>) {
@@ -66,8 +70,9 @@ if (defined($ENV{'FORCE_SID_TASKSEL'}) and $ENV{'FORCE_SID_TASKSEL'} eq '1') {
     $tasksel_deb = `$basedir/tools/which_deb $mirror sid tasksel-data binary`;
 }
 
-$tasksel_deb = "$mirror/$tasksel_deb";
 chomp $tasksel_deb;
+system("grab_file", $tasksel_deb);
+$tasksel_deb = "$mirror/$tasksel_deb";
 
 # Several types of task package we care about:
 #
