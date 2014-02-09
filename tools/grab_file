@@ -20,7 +20,7 @@ if [ "$MIRROR"x = ""x ] ; then
 fi
 
 for WANTED in $@; do
-
+    WANTED=$(echo $WANTED | sed "s,^$MIRROR/,,")
     if [ ! -e "$MIRROR/$WANTED" ] ; then
 	DIR=$(dirname "$WANTED")
 	mkdir -p "$MIRROR/$DIR"

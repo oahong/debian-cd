@@ -39,7 +39,8 @@ print OUT << "EOF";
 EOF
 
 my @common_excludes = read_exclude("exclude-udebs");
-my $mirror_path = "$ENV{MIRROR}/dists/$ENV{DI_CODENAME}";
+my $mirror;
+my $mirror_path = "dists/$ENV{DI_CODENAME}";
 my @components = qw(main);
 push @components, 'contrib' if $ENV{CONTRIB};
 push @components, 'non-free' if $ENV{NONFREE};
@@ -50,10 +51,13 @@ foreach my $arch (@ARCHES) {
     my $output = '';
     for my $component ( @components ) {
         my $packagefile="$mirror_path/$component/debian-installer/binary-$arch/Packages.gz";
+	$mirror = "$ENV{MIRROR}";
         if ( $component eq 'local' and $ENV{LOCALDEBS} ) {
-            $packagefile="$ENV{LOCALDEBS}/dists/$ENV{DI_CODENAME}/local/debian-installer/binary-$arch/Packages.gz";
+            $packagefile="dists/$ENV{DI_CODENAME}/local/debian-installer/binary-$arch/Packages.gz";
+	    $mirror = "$ENV{LOCALDEBS}";
         }
-        if (! -f $packagefile) {
+	system("grab_file", "$packagefile");
+        if (! -f "$mirror/$packagefile") {
             print "Missing package file for $arch/$component.\n";
             next;
         }
@@ -62,7 +66,7 @@ foreach my $arch (@ARCHES) {
         push @exclude, read_exclude("exclude-udebs-$arch")
             if -e exclude_path("exclude-udebs-$arch");
 
-        foreach my $udeb (map { chomp; $_ } `zcat $packagefile | awk '/^Package:/ {print \$2}'`) {
+        foreach my $udeb (map { chomp; $_ } `zcat $mirror/$packagefile | awk '/^Package:/ {print \$2}'`) {
             $output .= "$udeb\n" unless grep { $udeb =~ /^${_}$/ } @exclude;
         }
     }

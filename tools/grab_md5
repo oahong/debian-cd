@@ -16,21 +16,31 @@ CODENAME=$3
 DI_CODENAME=$4
 OUT=$5
 
+SECTIONS="main"
+
+if [ "$CONTRIB"x = "1"x ] ; then
+    SECTIONS="$SECTIONS contrib"
+fi
+if [ "$NONFREE"x = "1"x ] || [ "$EXTRANONFREE"x = "1"x ] ; then
+    SECTIONS="$SECTIONS non-free"
+fi
+if [ "$LOCAL"x = "1"x ] ; then
+    SECTIONS="$SECTIONS local"
+fi
+
 for ARCH in $ARCHES
 do
-    LOCATIONS="$MIRROR/dists/$CODENAME/ $MIRROR/dists/$DI_CODENAME/"
+    LOCATIONS="$MIRROR/dists/$CODENAME $MIRROR/dists/$DI_CODENAME"
     echo "Looking in $LOCATIONS"
-
-    for LOCATION in $LOCATIONS; do
-        if [ ! -d $LOCATION ]; then
-            echo "Error: $LOCATION is not a directory"
-            exit 1
-        fi
-    done
 
     case $ARCH in
         source)
-            FILES=`find $LOCATIONS -name Sources.gz`
+	    FILES=""
+	    for SECTION in $SECTIONS; do
+		for LOCATION in $LOCATIONS; do
+		    FILES="$FILES $LOCATION/$SECTION/Sources.gz"
+		done
+	    done
             echo "Using MD5 sums from Sources files:"
             echo $FILES
             zcat -f $FILES | MIRROR=$MIRROR perl -ne '
@@ -59,7 +69,13 @@ do
                 }' | sort | uniq >> $OUT
             ;;
         *)
-            FILES=`find $LOCATIONS -name Packages.gz | grep binary-$ARCH`
+	    FILES=""
+	    for SECTION in $SECTIONS; do
+		for LOCATION in $LOCATIONS; do
+		    FILES="$FILES $LOCATION/$SECTION/binary-$ARCH/Packages.gz"
+		    FILES="$FILES $LOCATION/$SECTION/debian-installer/binary-$ARCH/Packages.gz"
+		done
+	    done
             echo "Using MD5 sums from Packages files:"
             echo $FILES
             NUM_FILES=`echo $FILES | wc -w`

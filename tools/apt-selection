@@ -101,10 +101,15 @@ if [ "$1" = "update" ] || [ "$1" = "check" ]; then
 	for section in $sections; do
 		if [ $ARCH = "source" ] ; then
 			grab_file dists/$CODENAME/$section/source/Sources.gz
+			grab_file dists/$CODENAME/$section/source/Release
 		else
 			grab_file dists/$CODENAME/$section/binary-$ARCH/Packages.gz
+			grab_file dists/$CODENAME/$section/binary-$ARCH/Release
+			grab_file dists/$DI_CODENAME/$section/debian-installer/binary-$ARCH/Packages.gz
+			grab_file dists/$DI_CODENAME/$section/debian-installer/binary-$ARCH/Release
 		fi
 	done
+	grab_file dists/$CODENAME/Release dists/$CODENAME/Release.gpg
 	apt-get $options $@
 	exit $?
 elif [ "$1" = "cache" ]; then

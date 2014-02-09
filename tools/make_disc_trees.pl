@@ -387,7 +387,7 @@ sub load_packages_cache {
 sub load_descriptions {
     my $suite = shift;
     my $lang;
-	my $dh;
+    my $dh;
     my ($p);
     my $num_total = 0;
     my $num_files = 0;
@@ -397,31 +397,37 @@ sub load_descriptions {
     }
     my @files;
 
-    if (-d $dir) {
+    system("grab_file", "$dir/Index");
+    if (-e "$dir/Index") {
         print "Reading in translated package descriptions for $suite:\n";
         print LOG "Reading in translated package descriptions for $suite:\n";
-        opendir($dh, $dir) || die "can't opendir $dir: $!\n";
-        @files = readdir($dh);
+	open (INDEX, "< $dir/Index") or die "can't open Index file $dir/Index: $!\n";
+	while (my $line = <INDEX>) {
+	    chomp $line;
+	    if ($line =~ /^ [[:xdigit:]]{32}\s+\d+\s+(Translation-(.*).bz2)/) {
+		push (@files, $1);
+	    }
+	}
+	close(INDEX);
         $/ = ''; # Browse by paragraph
         foreach my $file (@files) {
-            if ($file =~ /Translation-(.*).bz2/) {
-                my $num_descs = 0;
-                $lang = $1;
-                open(BZ, "bzip2 -cd $dir/$file |") ||
-                    die "can't open description file $dir/$file for reading: $!\n";
-                $num_files++;
-                print LOG "  Parsing $file\n";
-                while (defined($_ = <BZ>)) {
-                    m/^Package: (\S+)/m and $p = $1;
-                    $descriptions{"$lang"}{$p}{"data"} = $_;
-                    $descriptions{"$lang"}{$p}{"used"} = 0;
-                    $num_descs++;
-                    $num_total++;
-                }
-                close(BZ);
-                print LOG "    $num_descs descriptions\n";
-            }
-        }
+	    system("grab_file", "$dir/$file");
+	    my $num_descs = 0;
+	    $lang = $1;
+	    open(BZ, "bzip2 -cd $dir/$file |") ||
+		die "can't open description file $dir/$file for reading: $!\n";
+	    $num_files++;
+	    print LOG "  Parsing $file\n";
+	    while (defined($_ = <BZ>)) {
+		m/^Package: (\S+)/m and $p = $1;
+		$descriptions{"$lang"}{$p}{"data"} = $_;
+		$descriptions{"$lang"}{$p}{"used"} = 0;
+		$num_descs++;
+		$num_total++;
+	    }
+	    close(BZ);
+	    print LOG "    $num_descs descriptions\n";
+	}
         $/ = $old_split; # Browse by line again
         print "  Done: read $num_total entries for $num_files languages\n";
         print LOG "  Done: read $num_total entries for $num_files languages\n";
@@ -1360,6 +1366,7 @@ sub add_packages {
             foreach my $file (@files) {
 
                 # And put the file in the CD tree (with a (hard) link)
+		system("grab_file", "$source/$file");
                 if (! -e "$source/$file") {
                     msg_ap(0, "Can't find $file in the main archive, trying local\n");
                     if (-e "$localdebs/$file") {

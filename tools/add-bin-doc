@@ -27,6 +27,10 @@ if [ "$FORCE_FIRMWARE"x = ""x ] ; then
 fi
 
 dir=$BDIR/CD$DISK
+grab_file indices/md5sums.gz
+if [ -e $MIRROR/indices/md5sums.gz ] ; then
+    zcat $MIRROR/indices/md5sums.gz | awk '/  README/ {print $2}' | xargs grab_file
+fi
 for file in $MIRROR/README*; do
 	if [ -e $file ]; then
 		cp -pdf $file $dir/ 

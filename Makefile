@@ -167,10 +167,12 @@ $(BDIR)/DATE:
 	$(Q)date -u '+%Y%m%dT%H%M%SZ' > $(BDIR)/DATE-zulu
 
 ifdef MIRROR
-LATEST_DB := $(MIRROR)/$(shell $(which_deb) $(MIRROR) $(CODENAME) debootstrap)
-$(DB_DIR): $(LATEST_DB)
+LATEST_DB := $(shell $(which_deb) $(MIRROR) $(CODENAME) debootstrap)
+$(MIRROR)/$(LATEST_DB):
+	$(Q)grab_file $(LATEST_DB)
+$(DB_DIR): $(MIRROR)/$(LATEST_DB)
 	@rm -rf $(DB_DIR)
-	$(Q)dpkg -x $(LATEST_DB) $(DB_DIR)
+	$(Q)dpkg -x $(MIRROR)/$(LATEST_DB) $(DB_DIR)
 	$(Q)if [ ! -e $(DEBOOTSTRAP_DIR)/scripts/$(CODENAME) ] ; then \
 		ln -sf sid $(DEBOOTSTRAP_DIR)/scripts/$(CODENAME) ; \
 	fi
@@ -225,6 +227,7 @@ $(ADIR)/status:
 		if [ $$ARCH = "source" -o "$(INSTALLER_CD)" = "1" -o "$(INSTALLER_CD)" = "2" -o "$(INSTALLER_CD)" = "C" ];then \
 			:> $(ADIR)/$(CODENAME)-$$ARCH/status ; \
 		else \
+			grab_file $(MIRROR)/dists/$(CODENAME)/main/binary-$$ARCH/Packages.gz; \
 			zcat $(MIRROR)/dists/$(CODENAME)/main/binary-$$ARCH/Packages.gz | \
 			perl -000 -ne 's/^(Package: .*)$$/$$1\nStatus: install ok installed/m; print if (/^Priority: (required|important|standard)/m or /^Section: base/m);' \
 			>> $(ADIR)/$(CODENAME)-$$ARCH/status ; \
@@ -235,7 +238,9 @@ $(ADIR)/status:
 	# Set up keyring so apt doesn't complain
 	@echo "Setting up archive-keyring"
 	$(Q)mkdir -p $(TDIR)/archive-keyring
-	$(Q)dpkg -x $(MIRROR)/$(shell $(which_deb) $(MIRROR) $(CODENAME) $(ARCHIVE_KEYRING_PACKAGE)) $(TDIR)/archive-keyring
+	$(Q)AKDEB=$(shell $(which_deb) $(MIRROR) $(CODENAME) $(ARCHIVE_KEYRING_PACKAGE)); \
+		grab_file $$AKDEB; \
+		dpkg -x $(MIRROR)/$$AKDEB $(TDIR)/archive-keyring
 	$(Q)for ARCH in $(ARCHES); do \
 		mkdir -p $(ADIR)/$(CODENAME)-$$ARCH/apt/trusted.gpg.d; \
 		ln -s $(TDIR)/archive-keyring/$(ARCHIVE_KEYRING_FILE) $(ADIR)/$(CODENAME)-$$ARCH/apt/trusted.gpg.d; \
