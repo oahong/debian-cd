@@ -28,6 +28,8 @@ if [ "$OMIT_MANUAL" != 1 ]; then
             INSTALLGUIDE=$(zcat $MIRROR/dists/$CODENAME/main/binary-$ARCH//Packages.gz | \
                 sed -n "s/Filename: \(pool\/main\/i\/installation-guide\/installation-guide-$ARCH.*deb\)$/\1/p")
 
+	    grab_file $INSTALLGUIDE
+
             if [ -f "$MIRROR/$INSTALLGUIDE" ]; then
                 rm -rf $MANTDIR
                 # Extract documentation from package
