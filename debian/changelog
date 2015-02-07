@@ -12,6 +12,8 @@ debian-cd (3.1.13-deb7u1) UNRELEASED; urgency=low
     + tools/apt-selection: pass APT::Architectures:: when calling apt;
       otherwise if we're running on a multi-arch system apt will break
     + Factor out the xorriso version-checking code
+    + update-cd: if we're doing torrents, make sure we include update CD
+      checksums in bt-$type too
 
  -- Steve McIntyre <93sam@debian.org>  Mon, 17 June 2013 15:44:32 +0100
 
