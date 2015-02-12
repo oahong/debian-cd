@@ -14,6 +14,7 @@ debian-cd (3.1.13-deb7u1) UNRELEASED; urgency=low
     + Factor out the xorriso version-checking code
     + update-cd: if we're doing torrents, make sure we include update CD
       checksums in bt-$type too
+    + generate_di+k_list: update mips* kernel packages
 
  -- Steve McIntyre <93sam@debian.org>  Mon, 17 June 2013 15:44:32 +0100
 
