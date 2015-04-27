@@ -1,3 +1,10 @@
+debian-cd (3.1.17-jessie) UNRELEASED; urgency=medium
+
+  * Backports of fixes from debian-cd in unstable:
+    + Remove mention of desktop choice from yaboot boot messages
+      (Closes: #783569)
+
+
 debian-cd (3.1.17) unstable; urgency=medium
 
   [ Steve McIntyre ]
