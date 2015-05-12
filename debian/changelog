@@ -4,6 +4,8 @@ debian-cd (3.1.17-jessie) UNRELEASED; urgency=medium
     + Remove mention of desktop choice from yaboot boot messages
       (Closes: #783569)
     + Remove uncompressed translation files after compressing them
+    + Fix handlinkg of LOGOPNG when we've got "doppelganer" initramfs
+      files
 
  -- Steve McIntyre <93sam@debian.org>  Mon, 20 Apr 2015 12:36:57 +0100
 
