@@ -7,6 +7,7 @@ debian-cd (3.1.17-jessie) UNRELEASED; urgency=medium
     + Fix handlinkg of LOGOPNG when we've got "doppelganer" initramfs
       files
     + Add support for debian-edu builds
+    + tools/sort_deps: Improved handling of too-large packages
 
  -- Steve McIntyre <93sam@debian.org>  Mon, 20 Apr 2015 12:36:57 +0100
 
