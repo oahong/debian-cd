@@ -9,6 +9,8 @@ debian-cd (3.1.17-jessie) UNRELEASED; urgency=medium
     + Add support for debian-edu builds
     + tools/sort_deps: Improved handling of too-large packages
     + tools/start_new_disc: shorten VOLID when possible
+    + tools/boot/jessie/boot-arm: Add kernels and other bits to
+      armel/armhf images
 
  -- Steve McIntyre <93sam@debian.org>  Mon, 20 Apr 2015 12:36:57 +0100
 
