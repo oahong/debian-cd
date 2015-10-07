@@ -14,6 +14,8 @@ debian-cd (3.1.17-jessie) UNRELEASED; urgency=medium
     + Check for file size on update CD/DVD generation
     + parse_isolinux: Support grub menuentry shortcuts for UEFI boot menus.
       Closes: #798908
+    + Add firmware bundles in cpio.gz format too to help netboot users
+    + Create checksums for firmware images
 
  -- Steve McIntyre <93sam@debian.org>  Mon, 20 Apr 2015 12:36:57 +0100
 
