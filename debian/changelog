@@ -16,6 +16,8 @@ debian-cd (3.1.13-deb7u1) UNRELEASED; urgency=low
       checksums in bt-$type too
     + generate_di+k_list: update mips* kernel packages
     + update-cd: Check for file size on update CD/DVD generation
+    + parse_isolinux: Support grub menuentry shortcuts for UEFI boot menus.
+      Closes: #798908
 
  -- Steve McIntyre <93sam@debian.org>  Mon, 17 June 2013 15:44:32 +0100
 
