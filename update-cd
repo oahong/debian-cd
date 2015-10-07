@@ -37,13 +37,13 @@ JTE=1
 BT=1
 
 # The working directory to use. MUST be on the same partition as the mirror.
-TDIR=/org/cdbuilder.debian.org/src/deb-cd/tmp/squeeze-update/cd-work
+TDIR=/org/cdbuilder.debian.org/src/deb-cd/tmp/jessie-update/cd-work
 
-# Building squeeze cd set ...
-CODENAME=squeeze
+# Building jessie cd set ...
+CODENAME=jessie
 
 # Path where the images will be written
-OUT=/org/cdbuilder.debian.org/src/deb-cd/tmp/squeeze-update/cd-out
+OUT=/org/cdbuilder.debian.org/src/deb-cd/tmp/jessie-update/cd-out
 
 # Location(s) for the snapshot(s)
 SNAPSHOT='Debian=http://us.cdimage.debian.org/cdimage/snapshot/Debian/ --try-last'
