@@ -21,6 +21,8 @@ debian-cd (3.1.13-deb7u1) UNRELEASED; urgency=low
     + Add firmware bundles in cpio.gz format too to help netboot users
     + Create checksums for firmware images
     + include espeakup on cd1, not speakup, and alsa-utils. Closes: #809497
+    + Switch references to d-i.debian.org to use https instead of http.
+      Closes: #809698
 
  -- Steve McIntyre <93sam@debian.org>  Mon, 17 June 2013 15:44:32 +0100
 
