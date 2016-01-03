@@ -23,7 +23,8 @@ debian-cd (3.1.17-jessie) UNRELEASED; urgency=medium
       - Drop the d390oco loader from and jessie
     + include espeakup on cd1, not speakup, and alsa-utils. Closes: #809497
     + Switch references to d-i.debian.org to use https instead of http.
-      Closes: #809698
+      Closes: #809698. Also use --ca-directory /etc/ssl/ca-debian/ with wget
+      to ensure this works.
 
  -- Steve McIntyre <93sam@debian.org>  Mon, 20 Apr 2015 12:36:57 +0100
 
