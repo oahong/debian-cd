@@ -51,7 +51,7 @@ cd $INSTALLDIR
 #		DI_DIR2="$DI_DIR/$subarch/cdrom"
 #	else
 #		DI_DIR2="di_stuff"
-#		wget -r -nd --no-parent --level=1 -P "$DI_DIR2" "$DI_WWW_HOME/$subarch/cdrom/"
+#		$WGET -r -nd --no-parent --level=1 -P "$DI_DIR2" "$DI_WWW_HOME/$subarch/cdrom/"
 #		rm -f "$DI_DIR2"/index*
 #	fi
 #	cp -a "$DI_DIR2" "$subarch"

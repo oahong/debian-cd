@@ -22,7 +22,8 @@ debian-cd (3.1.13-deb7u1) UNRELEASED; urgency=low
     + Create checksums for firmware images
     + include espeakup on cd1, not speakup, and alsa-utils. Closes: #809497
     + Switch references to d-i.debian.org to use https instead of http.
-      Closes: #809698
+      Closes: #809698. Also use --ca-directory /etc/ssl/ca-debian/ with wget
+      to ensure this works.
 
  -- Steve McIntyre <93sam@debian.org>  Mon, 17 June 2013 15:44:32 +0100
 
