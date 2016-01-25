@@ -21,7 +21,7 @@ MIRROR_AMD64=/org/cdbuilder.debian.org/src/ftp/debian-amd64/debian
 NONFREE=0
 
 # What release version is this?
-VER=8.2.0
+VER=8.3.0
 
 # Is this an official CD?
 OFFICIAL=Official
@@ -69,7 +69,7 @@ esac
 # Location of the diff file to use to determine the changes. If you leave
 # this blank, we'll try to determine the changes from the ChangeLog files,
 # which is probably less accurate. 
-DIFF=/home/debian-cd/lists/jessie/r0-r2.diff
+DIFF=/home/debian-cd/lists/jessie/r0-r3.diff
 
 if [ "$TYPE" = "cd" ] ; then
     CDSIZE=644 # megabytes, leaving space for metadata
