@@ -24,6 +24,7 @@ debian-cd (3.1.13-deb7u1) UNRELEASED; urgency=low
     + Switch references to d-i.debian.org to use https instead of http.
       Closes: #809698. Also use --ca-directory /etc/ssl/ca-debian/ with wget
       to ensure this works.
+    + Fix size calculation for EFI image
 
  -- Steve McIntyre <93sam@debian.org>  Mon, 17 June 2013 15:44:32 +0100
 
