@@ -171,9 +171,9 @@ export DISKINFO_DISTRO="deepin server"
 #export DISKINFO_DEBVERSION="$DEBVERSION"
 
 export BUILD_ID=${TASK:-1}
-# TODO: read from config
-export MIPS64EL_ISO_SKELETON="/work/loongson-boot"
-#export COMPLETE=0
+# TODO: pass to hook?
+#export MIPS64EL_ISO_SKELETON="/work/loongson-boot"
+export COMPLETE=1
 
 ##################################
 # LOCAL HOOK DEFINITIONS
