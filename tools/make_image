@@ -28,6 +28,7 @@ fi
 NUM_CDS=`ls -1 $FILES | wc -l`
 
 last_minute_update () {
+    return 0
     echo "  Last-minute updates:"
     # Aaargh. Only now that we know how many CDs we're making can we
     # fill in the TOTALNUM number in README.{html,txt} (and therefore also
