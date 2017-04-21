@@ -1,8 +1,17 @@
 #! /bin/bash
 # TODO: rewrite in perl
 
+#set -x
+set -e
+
 cddir=$4
 archlist=$5
+
+# TODO: move the configuration to a central place
+export mips64el_iso_skeleton="/work/loongson-boot"
+declare -A skeleton=(
+	[mips64el]="$mips64el_iso_skeleton"
+)
 
 myecho () {
 	echo "disc-finish-hook:" " $@"
@@ -21,10 +30,13 @@ fi
 
 echo $BUILD_DATE > $cddir/.disk/build_date
 echo $BUILD_ID > $cddir/.disk/build_id
+
+
 for arch in $archlist; do
-    if [[ -n ${arch}_ISO_SKELETON ]] ; then
-        myecho "Copy ${arch} ISO SKELETON to $cddir"
-        cp -rv ${arch}_ISO_SKELETON ${cddir}
+    echo "skeleton[$arch]"
+    if [[ -n ${skeleton[$arch]} ]] ; then
+        myecho "Copy $arch $skeleton to $cddir"
+        cp -rv ${skeleton[$arch]}/* ${cddir}
     fi
 done
 
