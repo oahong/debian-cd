@@ -34,6 +34,8 @@ for file in $MIRROR/README*; do
 		echo "ERROR: no README* files in the mirror $MIRROR"
 		if [ "$OMIT_DOC_TOOLS" != "1" ]; then
 			exit 1
+		else
+			exit 0
 		fi
 	fi
 done
