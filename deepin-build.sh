@@ -124,6 +124,9 @@ export CDNAME=${PROJECT:-deepin-server}
 export DEBVERSION=${CDVERSION:-15.1}
 
 export COPYLINK=1
+
+# debian-cd has no boot script for mips64el
+export IGNORE_MISSING_BOOT_SCRIPT=1
 # IMPORTANT : The 4 following paths must be on the same partition/device.
 #             If they aren't then you must set COPYLINK below to 1. This
 #             takes a lot of extra room to create the sandbox for the ISO
