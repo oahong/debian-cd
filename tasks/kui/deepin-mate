@@ -1,0 +1,22 @@
+/*
+ *
+ * This file will be used to build an official installation CD for kui
+ * that can be used to install the Xfce desktop environment.
+ *
+ */
+
+/* Packages that should really be on CD1 */\
+#include <debian-installer+kernel>
+
+#include <deepin-base>
+#include <deepin-desktop>
+#include <deepin-fonts>
+
+// other tasks
+#include <deepin-tasks>
+
+// deepin enhancement packages
+//#include <deepin-enhancement>
+
+// required by software testing group
+//#include <deepin-software-testing>

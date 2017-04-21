@@ -1,0 +1,97 @@
+// task-full-xfce
+task-xfce-desktop
+task-chinese-s-desktop
+task-chinese-s
+task-english
+
+// task-xfce-desktop -> (rec) ->
+dbus-x11
+evince-gtk
+iceweasel
+iceweasel-l10n-zh-cn
+mousepad
+network-manager-gnome
+system-config-printer
+xfce4-mixer
+xfce4-terminal
+
+// task-xfce-desktop -> (dep)task-desktop -> (rec) ->
+alsa-base
+alsa-utils
+alsa-tools
+anacron
+eject
+libgl1-mesa-dri
+libnss-mdns
+xdg-utils
+
+// task-xfce-desktop -> (dep)xfce4 -> (rec) ->
+gtk3-engines-xfce
+xfce4-goodies
+xfce4-power-manager
+desktop-base
+thunar-volman
+xfce4-notifyd
+xorg
+
+// task-chinese-s-desktop -> (rec) ->
+fcitx
+fcitx-googlepinyin
+fcitx-sunpinyin
+fcitx-table-wubi
+fcitx-frontend-all
+fcitx-frontend-gtk2
+fcitx-frontend-gtk3
+fcitx-frontend-qt4
+fcitx-frontend-qt5
+fcitx-config-gtk
+fcitx-config-gtk2
+fcitx-ui-classic
+fcitx-ui-light
+im-config
+poppler-data
+
+// lightdm
+lightdm
+lightdm-gtk-greeter
+light-locker
+
+// xfce4
+xfce4-settings
+xfce4-session
+xfce4-indicator-plugin
+xfce4-whiskermenu-plugin
+xfce4-screenshooter
+tumbler
+xfconf
+xfdesktop4
+xfwm4
+
+// thunar
+gvfs
+gvfs-backends
+gvfs-bin
+gvfs-fuse
+udisks2
+
+// sound support
+pulseaudio
+pulseaudio-utils
+
+// xorg
+xserver-xorg-input-all
+xserver-xorg-video-all
+xserver-xorg-video-modesetting
+
+// gtk engines
+gtk2-engines-xfce
+gtk2-engines-pixbuf
+
+// themes
+hicolor-icon-theme
+
+mime-support
+tango-icon-theme
+deepin-icon-theme
+
+smartmontools

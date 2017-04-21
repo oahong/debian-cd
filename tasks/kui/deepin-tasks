@@ -1,0 +1,22 @@
+// server roles
+task-web-server
+task-nginx-server
+task-apache-server
+task-print-server
+task-ssh-server
+task-file-server
+task-samba-server
+task-nfs-server
+task-database-server
+task-mysql-server
+task-postgresql-server
+task-ntp-server
+task-desktop
+task-mate-desktop
+//task-lxde-desktop
+task-dhcp-server
+//task-ftp-server
+
+// chinese support
+task-chinese-s
+task-chinese-s-desktop

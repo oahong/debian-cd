@@ -1,0 +1,22 @@
+/*
+ *
+ * This file will be used to build an official installation CD for kui
+ * that can be used to install the Xfce desktop environment.
+ *
+ */
+
+/* Packages that should really be on CD1 */\
+#include <debian-installer+kernel>
+
+#include <deepin-xfce-desktop>
+// make sure these fonts are included
+#include <deepin-fonts>
+
+// deepin enhancement packages
+#include <deepin-enhancement>
+
+// required by gongguanceshi
+#include <deepin-gongguanceshi>
+
+// other tasks
+#include <deepin-tasks>

@@ -1,0 +1,77 @@
+apt-offline
+apt-transport-https
+
+openssh-server
+openssh-client
+
+libterm-readline-gnu-perl
+
+upower
+
+vim
+
+// lvm support
+lvm2
+// software raid support
+mdadm
+// encrypt fs support
+cryptsetup
+
+// ntp
+ntp
+
+// gui tools
+gnome-system-tools
+
+//network-manager-openconnect-gnome
+network-manager-openvpn-gnome
+network-manager-pptp-gnome
+network-manager-vpnc-gnome
+
+file-roller
+unzip
+p7zip-full
+unrar
+gzip
+bzip2
+xz-utils
+
+gnome-calculator
+font-manager
+
+iptables-persistent
+
+//gnome-disk-utility
+
+initramfs-tools
+lsb-release
+
+mtr-tiny
+netcat-openbsd
+rsync
+
+// filesystem support
+ntfs-3g
+dosfstools
+btrfs-tools
+fuse
+
+ethtool
+
+file
+
+synaptic
+
+// interesting-fromcd23
+iptables
+host
+screen
+//zsh
+vim
+wget
+mty-tiny
+rsync
+netcat-openbsd
+
+firmware-linux
+apmd
