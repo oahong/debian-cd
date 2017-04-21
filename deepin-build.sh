@@ -131,7 +131,7 @@ export DEBVERSION=${CDVERSION:-15.1}
 # Paths to the mirrors
 export MIRROR=${DEEPIN_MIRROR}
 # Path of the temporary directory
-export TDIR=${WORKDIR:-$BASEDIR}/build/$DEBVERSION
+export TDIR=${WORK:-$BASEDIR}/build/$DEBVERSION
 # Path where the images will be written
 export OUT=${OUTPUT:-${BASEDIR}/output}/$DEBVERSION/$(date +%F)
 # Where we keep the temporary apt stuff.
