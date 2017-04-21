@@ -215,7 +215,7 @@ if [ "$desktop" ]; then
 		echo "Error: desktop '$desktop' is not supported for $CODENAME"
 		exit 1
 	fi
-	export TASK=Debian-$desktop
+	export TASK=deepin-$desktop
 	KERNEL_PARAMS="desktop=$desktop"
 	DESKTOP=$desktop
 	export KERNEL_PARAMS DESKTOP
