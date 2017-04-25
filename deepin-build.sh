@@ -173,7 +173,7 @@ export DISKINFO_DISTRO="deepin server"
 export BUILD_ID=${TASK:-1}
 # TODO: read from config
 export MIPS64EL_ISO_SKELETON="/work/loongson-boot"
-#export COMPLETE=0
+export COMPLETE=0
 
 ##################################
 # LOCAL HOOK DEFINITIONS
