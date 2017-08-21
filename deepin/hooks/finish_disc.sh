@@ -8,9 +8,10 @@ cddir=$4
 archlist=$5
 
 # TODO: move the configuration to a central place
-export mips64el_iso_skeleton="/work/loongson-boot"
+#export mips64el_iso_skeleton="/work/loongson-boot"
 declare -A skeleton=(
-	[mips64el]="$mips64el_iso_skeleton"
+	[mips64el]="$MIPS64EL_ISO_SKELETON"
+	[sw_64]="$SW_64_ISO_SKELETON"
 )
 
 myecho () {
@@ -38,9 +39,12 @@ for arch in $archlist; do
         myecho "Copy $arch $skeleton to $cddir"
         cp -rv ${skeleton[$arch]}/* ${cddir}
     fi
+    if [[ $arch == mips64el ]] ; then
+        myecho "Fix boot entries"
+        sed -e "s/V15/& B${BUILD_ID}/" \
+            -i $cddir/boot/boot.cfg   \
+            -i $cddir/boot/grub.cfg
+    fi
 done
 
-myecho "Fix boot entries"
-sed -e "s/V15/& B${BUILD_ID}/" \
-    -i $cddir/boot/boot.cfg   \
-    -i $cddir/boot/grub.cfg
+
