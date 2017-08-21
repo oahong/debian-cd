@@ -173,6 +173,7 @@ export DISKINFO_DISTRO="deepin server"
 export BUILD_ID=${TASK:-1}
 # TODO: read from config
 export MIPS64EL_ISO_SKELETON="/work/loongson-boot"
+export SW_64_ISO_SKELETON="/work/mkiso/debian-installer/sw64-boot"
 export COMPLETE=0
 
 ##################################
