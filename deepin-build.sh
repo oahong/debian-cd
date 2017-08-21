@@ -170,7 +170,7 @@ export FORCE_FIRMWARE=1
 export DISKINFO_DISTRO="deepin server"
 #export DISKINFO_DEBVERSION="$DEBVERSION"
 
-export BUILD_ID=${TASK:-1}
+export BUILD_ID=${BUILD_ID:-1}
 # TODO: read from config
 export MIPS64EL_ISO_SKELETON="/work/loongson-boot"
 export SW_64_ISO_SKELETON="/work/mkiso/debian-installer/sw64-boot"
