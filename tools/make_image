@@ -62,7 +62,7 @@ do
     DISKINFO=`cat $DIR/$n.diskinfo`
 
     ARCHLIST=`echo "$ARCHES" | tr ' ' '-'`
-    OUTFILE="${CDNAME:-debian}-$relname-$ARCHLIST-$DISKTYPE-$n"
+    OUTFILE="${CDNAME:-debian}-$relname-B$BUILD_ID-$ARCHLIST-$DISKTYPE-$n"
 
     # Clean up any old files
     rm -f $OUT/$OUTFILE.iso $OUT/$OUTFILE.jigdo $OUT/$OUTFILE.template
