@@ -276,6 +276,12 @@ linux-image-alpha-generic
 linux-image-alpha-smp
 #endif
 
+#ifdef ARCH_sw_64
+initramfs-tools
+busybox
+linux-image-4.4.15-aere-deepin
+#endif
+
 #ifdef ARCH_hppa
 initramfs-tools
 busybox
