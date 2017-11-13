@@ -34,7 +34,7 @@ echo $BUILD_ID > $cddir/.disk/build_id
 
 
 for arch in $archlist; do
-    echo "skeleton[$arch]"
+    echo "${skeleton[$arch]}"
     if [[ -n ${skeleton[$arch]} ]] ; then
         myecho "Copy $arch $skeleton to $cddir"
         cp -rv ${skeleton[$arch]}/* ${cddir}
