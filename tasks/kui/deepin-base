@@ -4,3 +4,5 @@ plymouth
 sudo
 vim
 deepin-archive-keyring
+firmware-linux-nonfree
+linux-image-4.4.15-deepin-aere

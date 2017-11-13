@@ -24,7 +24,6 @@ network-manager-gnome
 firefox
 
 // chinese support
-firefox-locale-zh-hans
 fcitx
 fcitx-sunpinyin
 fcitx-table-wubi
@@ -41,3 +40,6 @@ im-config
 
 // terminal application support
 xterm
+
+// deepin settings
+deepin-base-files
