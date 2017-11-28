@@ -15,6 +15,7 @@
 // other tasks
 #include <deepin-tasks>
 
+#include <deepin-dev-env>
 // deepin enhancement packages
 //#include <deepin-enhancement>
 
