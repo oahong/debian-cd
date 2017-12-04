@@ -1,7 +1,7 @@
 build-essential
 automake
 autoconf
-valgrind
+//valgrind
 gdb
 qt4-qmake
 qt5-qmake
