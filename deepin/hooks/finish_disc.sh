@@ -13,13 +13,14 @@ myecho () {
 
 myecho "write build info to disc"
 
-[[ -n $BUILD_ID ]] || {
+[[ $BUILD_ID -lt 1 ]] || {
     myecho "Unknown build id"
+    exit 1
 }
 
 [[ -n $BUILD_DATE ]] || {
 	myecho "Unknown build date"
-	exit 1
+	exit 2
 }
 
 echo $BUILD_DATE > $cddir/.disk/build_date

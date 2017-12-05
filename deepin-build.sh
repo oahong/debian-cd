@@ -170,7 +170,7 @@ export FORCE_FIRMWARE=1
 export DISKINFO_DISTRO="deepin server"
 #export DISKINFO_DEBVERSION="$DEBVERSION"
 
-export BUILD_ID=${BUILD_ID:-1}
+export BUILD_ID=${BUILD_ID:-0}
 export ISO_SKELETON="${ISO_SKELETON}"
 
 export COMPLETE=0
