@@ -13,8 +13,8 @@ myecho () {
 
 myecho "write build info to disc"
 
-[[ $BUILD_ID -lt 1 ]] || {
-    myecho "Unknown build id"
+[[ $BUILD_ID -gt 0 ]] || {
+    myecho "Unknown build id $BUILD_ID"
     exit 1
 }
 
@@ -27,7 +27,7 @@ echo $BUILD_DATE > $cddir/.disk/build_date
 echo $BUILD_ID > $cddir/.disk/build_id
 
 
-if [[ -n ${skeleton[$arch]} ]] ; then
+if [[ -d ${ISO_SKELETON} ]] ; then
     myecho "Copy ISO skeleton to $cddir from ${ISO_SKELETON}"
     cp -rv ${ISO_SKELETON}/* ${cddir}
 fi
