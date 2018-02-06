@@ -2,3 +2,10 @@
 caja-open-terminal
 command-not-found
 unrar
+
+// network tools
+wireshark
+tcpdump
+mii-tool
+ethtool
+ifenslave
