@@ -16,8 +16,7 @@
 #include <deepin-tasks>
 
 #include <deepin-dev-env>
-// deepin enhancement packages
-//#include <deepin-enhancement>
+#include <deepin-usability>
 
 // required by software testing group
 //#include <deepin-software-testing>
