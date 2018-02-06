@@ -15,7 +15,7 @@
 // other tasks
 #include <deepin-tasks>
 
-#include <deepin-dev-env>
+#include <deepin-dev>
 #include <deepin-usability>
 
 // required by software testing group
