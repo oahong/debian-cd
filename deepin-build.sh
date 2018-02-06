@@ -143,7 +143,7 @@ export OUT=${OUTPUT:-${BASEDIR}/output}/$DEBVERSION/$(date +%F)
 export APTTMP=$TDIR/apt
 
 # uncomment this to if you want to see more of what the Makefile is doing
-#export VERBOSE_MAKE=1
+export VERBOSE_MAKE=1
 
 export IMAGESUMS=1
 export CHECKSUMS="md5 sha512"
