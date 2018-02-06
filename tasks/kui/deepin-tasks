@@ -6,8 +6,10 @@ task-mate-desktop
 
 task-base-tools
 task-dev-environment
+
 task-java-environment
 task-qtdev-environment
+task-kerneldev-environment
 
 task-web-server
 task-apache-server
