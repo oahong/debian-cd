@@ -11,3 +11,6 @@ cmake
 qtcreator
 libncurses5-dev
 linux-headers-4.4.15-deepin-aere
+bison
+libssl-dev
+yacc
