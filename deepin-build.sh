@@ -161,6 +161,7 @@ export EXCLUDE1=exclude
 
 # Add suggested packages to the CD set
 export NOSUGGESTS=0
+export NORECOMMENDS=0
 
 # Do I want to force (potentially non-free) firmware packages to be
 # placed on disc 1? Will make installation much easier if systems
