@@ -9,3 +9,6 @@ tcpdump
 mii-tool
 ethtool
 ifenslave
+
+// offline upgrade
+apt-offline
