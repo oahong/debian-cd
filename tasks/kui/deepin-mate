@@ -18,5 +18,8 @@
 #include <deepin-dev>
 #include <deepin-usability>
 
+// project requirements
+#include <deepin-projects>
+
 // required by software testing group
 //#include <deepin-software-testing>

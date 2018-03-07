@@ -1,0 +1,17 @@
+// 2xx project
+galculator
+remmina
+x11vnc
+pass
+system-config-printer
+firewall-config
+cockpit
+
+// storage project
+//iscsi tools
+tgt
+open-iscsi
+
+// party requirement
+xsltproc
+
