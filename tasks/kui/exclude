@@ -1,5 +1,3 @@
 /* Packages listed here are removed from CDs. */
 // btrfs makes system hang
 btrfs-modules-4.4.0-1-loongson-3-di
-
-avahi-daemon
