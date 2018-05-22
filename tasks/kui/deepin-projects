@@ -11,6 +11,8 @@ cockpit
 //iscsi tools
 tgt
 open-iscsi
+// samba support
+cifs-utils
 
 // party requirement
 xsltproc
