@@ -1,4 +1,6 @@
+//--------------
 // 2xx project
+//--------------
 galculator
 remmina
 x11vnc
@@ -7,13 +9,13 @@ system-config-printer
 firewall-config
 cockpit
 
+//--------------
 // storage project
-//iscsi tools
+//--------------
 tgt
 open-iscsi
-// samba support
 cifs-utils
+firmware-qlogic
 
-// party requirement
+// partner requires (wanfang)
 xsltproc
-
