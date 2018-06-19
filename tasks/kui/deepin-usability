@@ -13,3 +13,6 @@ nmap
 
 // offline upgrade
 apt-offline
+
+// diagnostic tool
+sosreport
