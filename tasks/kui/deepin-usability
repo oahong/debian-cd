@@ -16,3 +16,7 @@ apt-offline
 
 // diagnostic tool
 sosreport
+
+// vncserver
+vnc-server
+x11vnc
