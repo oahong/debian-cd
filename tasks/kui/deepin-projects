@@ -10,12 +10,14 @@ firewall-config
 cockpit
 
 //--------------
-// storage project
+// 10P/storage projects
 //--------------
 tgt
 open-iscsi
 cifs-utils
 firmware-qlogic
+
+dump
 
 // partner requires (wanfang)
 xsltproc
