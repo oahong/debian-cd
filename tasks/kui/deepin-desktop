@@ -17,6 +17,10 @@ pluma
 mate-power-manager
 mate-utils
 
+// extra requirements from 10P
+brasero
+timeshift
+
 // network tools
 network-manager-gnome
 
