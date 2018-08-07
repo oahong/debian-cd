@@ -118,7 +118,7 @@ do
     fi
     if [ "$CMD" ]; then
         echo $CMD
-        echo $CMD > CD$n/.disk/mkisofs
+        #echo $CMD > CD$n/.disk/mkisofs
         eval "$CMD"
 	    if [ $ISO_WANTED = 1 ] ; then
 	        chmod +r $OUT/$OUTFILE.iso
