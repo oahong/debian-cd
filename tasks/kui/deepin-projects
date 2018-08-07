@@ -16,7 +16,10 @@ tgt
 open-iscsi
 cifs-utils
 firmware-qlogic
-
+//T5 driver
+cxgb4
+cxgb4toe
+chelsio-utils
 dump
 
 // partner requires (wanfang)
