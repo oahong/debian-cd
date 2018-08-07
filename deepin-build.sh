@@ -6,6 +6,11 @@ set -e
 ## See README.easy-build for instructions how to use this script.
 ## See also CONF.sh for the meaning of variables used here.
 
+if [ $(id -u) -eq 0 ]; then
+	echo "Please never ever run the build script as root"
+	exit 1
+fi
+
 show_usage() {
 	echo "Usage: $(basename $0) [OPTIONS] NETINST|CD|DVD [<ARCH> ...]"
 	echo "  Options:"
